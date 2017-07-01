@@ -19,11 +19,6 @@
 // Version information
 #define VERSION "1.0.0"
 
-// Define infineon if you are using the XMC1100 board
-#define _INFINEON
-// Define motor is using the automatic dispenser
-#define _MOTOR
-
 // Material type IDS
 #define PLA 0
 #define ABS 1

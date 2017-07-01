@@ -14,6 +14,11 @@
 
 */
 
+// Define infineon if you are using the XMC1100 board
+#define _INFINEON
+// Define motor is using the automatic dispenser
+#define _MOTOR
+
 #include <HX711.h>
 #include <Streaming.h>
 #include "filament.h"

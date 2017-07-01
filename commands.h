@@ -32,4 +32,13 @@
 #define MOTOR_PULL "pull"       // Pull back a lenght unit
 #define MOTOR_FEED_CONT "feedcont"    // Feed continuopusly
 #define MOTOR_PULL_CONT "pullcont"    // Pull back continuously
+#define MOTOR_FEEDLEN "length"        // Centimeters to feed every command
 #endif
+
+// Information commands
+#define SHOW_SETTINGS "config"    // Shows the current configuration settings
+#define SHOW_STATUS "status"      // Shows all the weight status values
+
+// Setting commands
+#define SET_FEEDLENGTH "setfeed"    // Set the motor filament lenght. Usage:  setfeed=x [x = cm]
+
