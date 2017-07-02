@@ -1,4 +1,4 @@
-/*
+/**
 
   3D Printer FIlament Dispense - USB to serial control
 
@@ -22,7 +22,9 @@
 #include <HX711.h>
 #include <Streaming.h>
 #include "filament.h"
-#include "motor.h"
+#ifdef _MOTOR
+#include "motorcontrol.h"
+#endif
 #include "commands.h"
 
 #define DOUT 5  // load sensor data pin
@@ -30,6 +32,9 @@
 
 // Load sensor library initialisation
 HX711 scale(DOUT, CLK);
+#ifdef _MOTOR
+MotorControl motor;
+#endif
 
 // filament diameter (descriptive)
 String diameter;
@@ -73,9 +78,8 @@ void setup() {
   Serial.begin(38400);
   
   // Print a message to the LCD.
-  Serial << "BalearicDynamics 3D Printer Filament Monitor and Dispenser\nVer. 1.1.15" << endl;
-
-  Serial << endl << "Calibrating..." << endl;
+  Serial << APP_TITLE << endl;
+  Serial << CALIBRATING << endl;
 
   // Initialise the scale with the model calibration factor then set the initial weight to 0
   scale.set_scale(SCALE_CALIBRATION);
@@ -87,6 +91,11 @@ void setup() {
   // Initialised the default values for the default filament type
   setDefaults();
   showInfo();
+
+#ifdef _MOTOR
+  motor.begin();
+  
+#endif
 }
 
 // ==============================================
@@ -99,6 +108,19 @@ void setup() {
  * The scale reading is done at a specific frequence and is interrupt-driven
  */
 void loop() {
+#ifdef _MOTOR
+  // Feed Extruder
+  motor.feedExtruder(FEED_EXTRUDER_DELAY * 3);
+  //  tleDiagnostic();
+  delay(2000);
+  motor.filamentLoad(5000);
+  //  tleDiagnostic();
+  delay(2000);
+  motor.filamentFeed(5000);
+  //  tleDiagnostic();
+  delay(2000);
+#endif
+  
   // Get the last reading
   prevRead = lastRead;
   lastRead = readScale();

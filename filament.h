@@ -16,8 +16,13 @@
  *  Based on these average information we define the following:
  */
 
-// Version information
-#define VERSION "1.0.0"
+#ifdef _MOTOR
+#define APP_TITLE "Balearic Dynamics 3D Printer Filament Monitor and Dispenser\nMotor control Ver. 1.2.1"
+#else
+#define APP_TITLE "Balearic Dynamics 3D Printer Filament Monitor and Dispenser\nManual control Ver. 1.2.1"
+#endif
+
+#define CALIBRATING "Calibrating..."
 
 // Material type IDS
 #define PLA 0
