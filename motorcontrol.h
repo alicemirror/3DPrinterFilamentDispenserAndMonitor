@@ -87,6 +87,7 @@ class MotorControl {
      * \todo Check the harfbridge generating the specific error 
      */
     void tleDiagnostic(void);
+
 };
 
 
