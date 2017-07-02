@@ -9,6 +9,9 @@
  *  \version 1.0 beta
  */
 
+#ifndef _MOTOR
+#define _MOTOR
+
 #include <TLE94112.h>
 
 // Duration in ms motor runs before reading for changes (sensor, serial)
@@ -57,3 +60,4 @@
 #define TLE_TEMPWARNING "Warning high temperature"
 #define TLE_ERROR_HORBAR "********************************************"
 
+#endif

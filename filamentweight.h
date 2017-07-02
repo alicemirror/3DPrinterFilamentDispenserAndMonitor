@@ -8,6 +8,9 @@
  *  \version 1.0 beta
  */
 
+#ifndef _FILAMENTWEIGHT
+#define _FILAMENTWEIGHT
+
 #include <HX711.h>
 #include <Streaming.h>
 #include "filament.h"
@@ -133,3 +136,4 @@ class FilamentWeight {
 
 };
 
+#endif

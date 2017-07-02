@@ -9,6 +9,9 @@
  *  \version 1.0 beta
  */
 
+#ifndef _MOTORCONTROL
+#define _MOTORCONTROL
+
 #include <TLE94112.h>
 #include "motor.h"
 
@@ -90,4 +93,4 @@ class MotorControl {
 
 };
 
-
+#endif

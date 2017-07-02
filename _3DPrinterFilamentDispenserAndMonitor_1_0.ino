@@ -14,23 +14,21 @@
 
 */
 
-// Define infineon if you are using the XMC1100 board
-#define _INFINEON
-// Define motor is using the automatic dispenser
-#define _MOTOR
-
 #include <Streaming.h>
 #include "filament.h"
 #include "filamentweight.h"
-
-#ifdef _MOTOR
+#include "commands.h"
+#ifdef _USE_MOTOR
 #include "motorcontrol.h"
+#endif
+
+
+#ifdef _USE_MOTOR
 MotorControl motor;
 #endif
 
+//! The weight control class
 FilamentWeight scale;
-
-#undef DEBUG
 
 // ==============================================
 // Initialisation
@@ -39,18 +37,18 @@ void setup() {
   // Serial is initialised at high speed. If your Arduino boards
   // loose characters of show unwanted/unexpected behavior
   // try with a lower communication speed
-  Serial.begin(38400);
-  
+  Serial.begin(9600);
+
   // Print a message to the LCD.
   Serial << APP_TITLE << endl;
   Serial << CALIBRATING << endl;
 
   // Set the dip switch pins
   pinMode(READING_PIN, OUTPUT);   // LED reading signal
-
+  // Initialize the weight class
   scale.begin();
-
-#ifdef _MOTOR
+#ifdef _USE_MOTOR
+  // initialize the motor class
   motor.begin();  
 #endif
 }
@@ -65,22 +63,27 @@ void setup() {
  * The scale reading is done at a specific frequence and is interrupt-driven
  */
 void loop() {
-#ifdef _MOTOR
-  // Feed Extruder
-  motor.feedExtruder(FEED_EXTRUDER_DELAY * 3);
-  //  tleDiagnostic();
-  delay(2000);
-  motor.filamentLoad(5000);
-  //  tleDiagnostic();
-  delay(2000);
-  motor.filamentFeed(5000);
-  //  tleDiagnostic();
-  delay(2000);
-#endif
+//#ifdef _USE_MOTOR
+//  // Feed Extruder
+//  motor.feedExtruder(FEED_EXTRUDER_DELAY * 3);
+//  //  tleDiagnostic();
+//  delay(2000);
+//  motor.filamentLoad(5000);
+//  //  tleDiagnostic();
+//  delay(2000);
+//  motor.filamentFeed(5000);
+//  //  tleDiagnostic();
+//  delay(2000);
+//#endif
   
   // Get the last reading
   scale.prevRead = scale.lastRead;
   scale.lastRead = scale.readScale();
+
+  // Check for command availability for parsing
+  if(Serial.available() > 0) {
+    parseCommand(Serial.readString());
+  }
 
   digitalWrite(READING_PIN, HIGH); // LED Enable
 
@@ -90,10 +93,10 @@ void loop() {
       // Set the initial weight to calculate the consumed material during a session
       scale.initialWeight = scale.lastRead;
       scale.prevRead = scale.lastRead;
-      scale.showLoad();
+//      scale.showLoad();
       break;
     case STAT_LOAD:
-      scale.showStat();
+//      scale.showStat();
       break;
     case STAT_PRINTING:
       // Avoid fluctuations due the extruder tension
@@ -101,10 +104,10 @@ void loop() {
         // Restore the previous reading
         scale.lastRead = scale.prevRead;
       }
-      scale.showStat();
+//      scale.showStat();
       break;  
     default:
-        scale.showInfo();
+//        scale.showInfo();
         break;
     } // switch
 
@@ -155,17 +158,86 @@ void loop() {
 }
 
 
-  /**
-   * \brief Serial interrupt reading commands for parsing
-   */
-//  void serialEvent() {
-//    // Get the byte
-//    char inChar = (char)Serial.read();
-//    // Queue the command buffer (String)
-//    commandString += inChar;
-//    // Check if the command is complete and set the flag
-//    if(inChar == '\n') {
-//      parseCommand();
-//    }
-//  }
+/**
+ * Parse the command string and echo the executing message or command unknown error.
+ * 
+ * \param commandString the string coming from the serial
+ */
+ void parseCommand(String commandString) {
+  boolean cmdOk = false;
+
+  // Parameters settings
+  if(commandString.equals(SET_PLA)) {
+    Serial << CMD_SET << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(SET_ABS)) {
+    Serial << CMD_SET << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(SET_175)) {
+    Serial << CMD_SET << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(SET_300)) {
+    Serial << CMD_SET << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(SET_1KG)) {
+    Serial << CMD_SET << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(SET_2KG)) {
+    Serial << CMD_SET << "'" << commandString << "'" << endl;
+  }
+  // Change behaviour mode
+  else if(commandString.equals(MODE_AUTO)) {
+    Serial << CMD_MODE << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(MODE_MANUAL)) {
+    Serial << CMD_MODE << "'" << commandString << "'" << endl;
+  }
+  // Change current functional status
+  else if(commandString.equals(STATUS_RESET)) {
+    Serial << CMD_STATUS << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(STATUS_LOAD)) {
+    Serial << CMD_STATUS << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(STATUS_RUN)) {
+    Serial << CMD_STATUS << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(STATUS_DEFAULT)) {
+    Serial << CMD_STATUS << "'" << commandString << "'" << endl;
+  }  
+  // Informative commands
+  else if(commandString.equals(SHOW_SETTINGS)) {
+    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(SHOW_STATUS)) {
+    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(SHOW_DUMP)) {
+    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(SHOW_WEIGHT)) {
+    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+  }
+#ifdef _USE_MOTOR
+  // Motor control
+  else if(commandString.equals(MOTOR_FEED)) {
+    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(MOTOR_PULL)) {
+    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(MOTOR_STOP)) {
+    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(MOTOR_FEED_CONT)) {
+    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(MOTOR_PULL_CONT)) {
+    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+  }
+#endif
+  // Not a valid command
+  else
+    Serial << CMD_NOCMD << "'" << commandString << "'" << endl;
+ }
 

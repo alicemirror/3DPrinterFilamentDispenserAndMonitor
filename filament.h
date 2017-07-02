@@ -16,7 +16,16 @@
  *  Based on these average information we define the following:
  */
 
-#ifdef _MOTOR
+#ifndef _FILAMENT
+#define _FILAMENT
+
+// Define infineon if you are using the XMC1100 board
+#define _INFINEON
+// Define motor is using the automatic dispenser
+#define _USE_MOTOR
+#undef DEBUG
+
+#ifdef _USE_MOTOR
 #define APP_TITLE "Balearic Dynamics 3D Printer Filament Monitor and Dispenser\nMotor control Ver. 1.2.1"
 #else
 #define APP_TITLE "Balearic Dynamics 3D Printer Filament Monitor and Dispenser\nManual control Ver. 1.2.1"
@@ -120,4 +129,4 @@
 // LED pin on when reading
 #define READING_PIN 13
 
-
+#endif
