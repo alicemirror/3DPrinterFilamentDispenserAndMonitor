@@ -19,11 +19,11 @@
 #define DOUT 5  // load sensor data pin
 #define CLK 6   // load sensor clock pin
 
-#define STATUS_RESET 0      // After initialisation or reset
-#define STATUS_READY 1      // System ready
-#define STATUS_PRINTING 2   // Filament in use
-#define STATUS_LOAD 3       // Roll loaded
-#define STATS_STARTED 4     // Application started
+#define STATUS_RESET 0      ///< After initialisation or reset
+#define STATUS_READY 1      ///< System ready
+#define STATUS_PRINTING 2   ///< Filament in use
+#define STATUS_LOAD 3       ///< Roll loaded
+#define STATS_STARTED 4     ///< Application started
 
 //! Status structure varoab;es amd flags
 typedef struct process {
@@ -46,16 +46,16 @@ class FilamentWeight {
   public:
     //! Application status
     process currentStatus;  
-    int wID;  // Filament weight ID
-    int diameterID; // Roll diameter
-    int materialID; // Roll material
-    int filament; // Filament type
+    int wID;            ///< Filament weight ID
+    int diameterID;     ///< Roll diameter
+    int materialID;     ///< Roll material
+    int filament;       ///< Filament type
     //! Last read value from the cell
     float lastRead;
     //! Previous read value from the cell
     float prevRead;
 
-    //! Load sensor library
+    //! Sensor library instance
     HX711 scale;
 
     /**

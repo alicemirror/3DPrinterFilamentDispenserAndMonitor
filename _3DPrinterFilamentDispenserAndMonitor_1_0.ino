@@ -22,7 +22,6 @@
 #include "motorcontrol.h"
 #endif
 
-
 #ifdef _USE_MOTOR
 MotorControl motor;
 #endif
@@ -63,19 +62,6 @@ void setup() {
  * The scale reading is done at a specific frequence and is interrupt-driven
  */
 void loop() {
-//#ifdef _USE_MOTOR
-//  // Feed Extruder
-//  motor.feedExtruder(FEED_EXTRUDER_DELAY * 3);
-//  //  tleDiagnostic();
-//  delay(2000);
-//  motor.filamentLoad(5000);
-//  //  tleDiagnostic();
-//  delay(2000);
-//  motor.filamentFeed(5000);
-//  //  tleDiagnostic();
-//  delay(2000);
-//#endif
-  
   // Get the last reading
   scale.prevRead = scale.lastRead;
   scale.lastRead = scale.readScale();
@@ -98,55 +84,6 @@ void loop() {
   }
 
   digitalWrite(READING_PIN, HIGH); // LED Enable
-
-  // Check the current status of the system
-  switch(scale.statID) {
-    case STAT_READY:
-      // Set the initial weight to calculate the consumed material during a session
-      scale.initialWeight = scale.lastRead;
-      scale.prevRead = scale.lastRead;
-//      scale.showLoad();
-      break;
-    case STAT_LOAD:
-//      scale.showStat();
-      break;
-    case STAT_PRINTING:
-      // Avoid fluctuations due the extruder tension
-      if( (scale.lastRead - scale.prevRead) >= MIN_EXTRUDER_TENSION) {
-        // Restore the previous reading
-        scale.lastRead = scale.prevRead;
-      }
-//      scale.showStat();
-      break;  
-    default:
-//        scale.showInfo();
-        break;
-    } // switch
-
-//        if(statID == STAT_NONE) {
-//          statID = STAT_READY;
-//          stat = SYS_READY;
-//          return;
-//        }
-//        if(statID == STAT_READY) {
-//          return;
-//        } 
-//        if(statID == STAT_LOAD) {
-//          // Change from load to running mode
-//          stat = SYS_PRINTING;
-//          statID = STAT_PRINTING;
-//          lcd.clear();
-//          return;
-//        } 
-//        if(statID == STAT_PRINTING) {
-//          // Change from load to running mode
-//          stat = SYS_LOAD;
-//          statID = STAT_LOAD;
-//          // Set the initial weight to calculate the consumed material during a session
-//          initialWeight = lastRead;
-//          lcd.clear();
-//          return;
-//        }
 
 //  // Manage the partial consumption button. Only when STAT_PRINTING
 //  if(digitalRead(CHANGE_UNIT_PIN)) {
@@ -171,121 +108,199 @@ void loop() {
  void parseCommand(String commandString) {
   boolean cmdOk = false;
 
+  // =========================================================
   // Parameters settings
+  // =========================================================
+
+  // Set PLA material and recalculate the material characteristics
+  // Flag is set to display an update nesxt loop cycle
   if(commandString.equals(SET_PLA)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_SET << "'" << commandString << "'" << endl;
-    // Change the material type
+#endif
     scale.materialID = PLA;
-    // Set the flag to dispaly the changes next loop
     scale.currentStatus.filamentMaterialChanged = true;
-    // Update the states IDs
     scale.calcMaterialCharacteristics();
   }
+  // Set ABS material and recalculate the material characteristics
+  // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_ABS)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_SET << "'" << commandString << "'" << endl;
-    // Change the material type
+#endif
     scale.materialID = ABS;
-    // Set the flag to dispaly the changes next loop
     scale.currentStatus.filamentMaterialChanged = true;
-    // Update the states IDs
     scale.calcMaterialCharacteristics();
   }
+  // Set 1.75 mm filament diameter and recalculate the material characteristics
+  // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_175)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_SET << "'" << commandString << "'" << endl;
-    // Change the material type
+#endif
     scale.diameterID = DIAM_175;
-    // Set the flag to dispaly the changes next loop
     scale.currentStatus.filamentMaterialChanged = true;
-    // Update the states IDs
     scale.calcMaterialCharacteristics();
   }
+  // Set 3.00 mm filament diameter and recalculate the material characteristics
+  // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_300)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_SET << "'" << commandString << "'" << endl;
-    // Change the material type
+#endif
     scale.diameterID = DIAM_300;
-    // Set the flag to dispaly the changes next loop
     scale.currentStatus.filamentMaterialChanged = true;
-    // Update the states IDs
     scale.calcMaterialCharacteristics();
   }
+  // Set 1kg filament spool and recalculate the material characteristics
+  // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_1KG)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_SET << "'" << commandString << "'" << endl;
-    // Change the material type
+#endif
     scale.wID = ROLL1KG;
-    // Set the flag to dispaly the changes next loop
     scale.currentStatus.filamentMaterialChanged = true;
-    // Update the states IDs
     scale.calcMaterialCharacteristics();
   }
+  // Set 2kg filament spool and recalculate the material characteristics
+  // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_2KG)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_SET << "'" << commandString << "'" << endl;
-    // Change the material type
+#endif
     scale.wID = ROLL2KG;
-    // Set the flag to dispaly the changes next loop
     scale.currentStatus.filamentMaterialChanged = true;
-    // Update the states IDs
     scale.calcMaterialCharacteristics();
   }
+
+  // =========================================================
   // Change current functional status
+  // =========================================================
+
+  // Send a reset command and restore the parameters to the defaults
+  // The tare is not recalculated to avoid wrong measure (if the spool
+  // is already on the scale platform
+  // This command had mandatory executi9on and ignore the previous state
+  // The flag is set to show an update nextg loop cycle
   else if(commandString.equals(S_RESET)) {
-    // Reset command does not matter the previous state and is 
-    // executed anyway.
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_STATUS << "'" << commandString << "'" << endl;
+#endif
     scale.setDefaults();
-    // Set the flag to dispplay the new status in the next loop
+    scale.stat = SYS_READY;
+    scale.statID = STAT_READY;
     scale.currentStatus.weightStatusChangedShown = true;
   }
+  // Send a load command status setting
+  // Should be executed after the filament roll has been set 
+  // and placed on the scale base or after a reset command
+  // The flag is set to show an update nextg loop cycle
   else if(commandString.equals(S_LOAD)) {
+#ifdef _DEBUG_COMMANDS
+    Serial << CMD_STATUS << "'" << commandString << "'" << endl;
+#endif
     scale.stat = SYS_LOAD;
     scale.statID = STAT_LOAD;
     scale.initialWeight = scale.lastRead;
-    Serial << CMD_STATUS << "'" << commandString << "'" << endl;
+    scale.currentStatus.weightStatusChangedShown = true;
   }
+  // Send a run command status setting
+  // Should be sent when a print job is started
   else if(commandString.equals(S_RUN)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_STATUS << "'" << commandString << "'" << endl;
+#endif
+    scale.stat = SYS_RUN;
+    scale.statID = STAT_RUN;
+    scale.currentStatus.weightStatusChangedShown = true;
   }
+  // Send a default command status setting
+  // Should be used to reset the system to the default values 
+  // of the material without changing any setting in the weight
+  // tare and calculations but the current status is not changed.
+  // Use this commmand to reset the material to the internal conditions
   else if(commandString.equals(S_DEFAULT)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_STATUS << "'" << commandString << "'" << endl;
+#endif
+    scale.setDefaults();
+    scale.currentStatus.filamentMaterialChanged = true;
   }  
+
+  // =========================================================
   // Informative commands
+  // =========================================================
+
   else if(commandString.equals(SHOW_SETTINGS)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+#endif
   }
   else if(commandString.equals(SHOW_STATUS)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+#endif
   }
   else if(commandString.equals(SHOW_DUMP)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+#endif
   }
   else if(commandString.equals(SHOW_WEIGHT)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+#endif
   }
-#ifdef _USE_MOTOR
+
+  // =========================================================
   // Motor control
+  // =========================================================
+
+#ifdef _USE_MOTOR
   else if(commandString.equals(MOTOR_FEED)) {
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+      motor.feedExtruder(FEED_EXTRUDER_DELAY);
+      motor.tleDiagnostic();
   }
   else if(commandString.equals(MOTOR_PULL)) {
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+      motor.filamentLoad(FEED_EXTRUDER_DELAY);
+      motor.tleDiagnostic();
   }
   else if(commandString.equals(MOTOR_STOP)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+#endif
   }
   else if(commandString.equals(MOTOR_FEED_CONT)) {
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+    motor.filamentFeed(FEED_EXTRUDER_DELAY*10);
+    motor.tleDiagnostic();
   }
   else if(commandString.equals(MOTOR_PULL_CONT)) {
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+    motor.filamentLoad(FEED_EXTRUDER_DELAY*10);
+    motor.tleDiagnostic();
   }
+
+  // =========================================================
   // Change behaviour mode
+  // =========================================================
+
   else if(commandString.equals(MODE_AUTO)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_MODE << "'" << commandString << "'" << endl;
+#endif
   }
   else if(commandString.equals(MODE_MANUAL)) {
+#ifdef _DEBUG_COMMANDS
     Serial << CMD_MODE << "'" << commandString << "'" << endl;
+#endif
   }
 #endif
   // Not a valid command
+  // This is the only command response that is shown also when
+  // debug is not set
   else
     Serial << CMD_NOCMD << "'" << commandString << "'" << endl;
  }

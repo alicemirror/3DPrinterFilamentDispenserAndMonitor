@@ -15,7 +15,10 @@
 #include <TLE94112.h>
 #include "motor.h"
 
-//!  \brief  Class that represents a TLE94112 controlling the filament motor
+/**
+ * \brief  Class that manages the TLE94112 Arduino shield
+ * controlling the filament motor
+ */
 class MotorControl {
   public:
     //! \brief Initialization and motor settings

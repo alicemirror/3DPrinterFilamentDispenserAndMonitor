@@ -1,13 +1,20 @@
-/* 
- *  Serial commands to control the behaviour of the system
+/**
+ *  \file commands.cpp
+ *  \brief Serial commands to control the behaviour of the system.
+ *  All the commands are case sensitive
  *  
- *  All the commands are single character
+ *  \author Enrico Miglino <balearicdynamics@gmail.com> \n
+ *  Balearic Dynamics sl <www.balearicdynamics.com> SPAIN
+ *  \date July 2017
+ *  \version 1.0 beta
  */
 
- #ifndef _COMMANDS
- #define _COMMANDS
+#ifndef _COMMANDS
+#define _COMMANDS
 
-// Execution notification
+#undef _DEBUG_COMMANDS
+
+// Execution notification, debug only
 #define CMD_EXEC "***CMD : executing "
 #define CMD_NOCMD "***ERR : unknown "
 #define CMD_SET "***CMD : setting "
