@@ -25,10 +25,11 @@ float FilamentWeight::readScale(void) {
 }
 
 void FilamentWeight::setDefaults(void) {
-  int wID;  // Filament weight ID
-  int diameterID; // Roll diameter
-  int materialID; // Roll material
-  int filament; // Filament type
+  // Initializes the parameters status
+  currentStatus.weightStatus = STATUS_RESET;
+  currentStatus.weightStatusChangedShown = false;
+  currentStatus.weightExtruderTension = false;
+  currentStatus.filamentMaterialChanged = false;
 
   stat = SYS_STARTED;
   statID = STAT_NONE;
@@ -43,6 +44,11 @@ void FilamentWeight::setDefaults(void) {
   materialID = PLA;         // Material
   wID = ROLL1KG;            // Weight
 
+  // Update the material IDs
+  calcMaterialCharacteristics();
+}
+
+void FilamentWeight::calcMaterialCharacteristics(void) {
   // Calculate the material + diameter ID
   if(materialID == PLA) {
     filament = PLA175 + diameterID; 
@@ -100,7 +106,7 @@ float FilamentWeight::calcConsumedCentimeters(void) {
   return calcGgramsToCentimeters(calcConsumedGrams());
 }
 
-float FilamentWeight::calcConsumedGrams() {
+float FilamentWeight::calcConsumedGrams(void) {
   return initialWeight - lastRead;
 }
 
@@ -121,7 +127,8 @@ float FilamentWeight::calcRemainingPerc(float w) {
 }
 
 void FilamentWeight::showInfo(void) {
-  Serial << endl << material << " " << diameter << " " << weight << " " << UNITS_KG << endl;
+  Serial << endl << TIT_MATERIAL << endl;
+  Serial << material << " " << diameter << " " << weight << " " << UNITS_KG << endl;
   Serial << stat << endl;
 }
 

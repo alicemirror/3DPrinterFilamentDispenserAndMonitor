@@ -17,17 +17,17 @@
 
 // Filament setup
 #define SET_PLA "PLA"
-#define SET_ABS "PLA"
+#define SET_ABS "ABS"
 #define SET_175 "1.75"
 #define SET_300 "3.00"
 #define SET_1KG "1kg"
 #define SET_2KG "2kg"
 
 // Status change
-#define STATUS_RESET "reset"        // Reset the system with the current filament setup
-#define STATUS_LOAD "load"          // Filament roll has been loaded
-#define STATUS_RUN "run"            // Print job is running
-#define STATUS_DEFAULT "default"    // Reset the system with the default settings
+#define S_RESET "reset"        // Reset the system with the current filament setup
+#define S_LOAD "load"          // Filament roll has been loaded
+#define S_RUN "run"            // Print job is running
+#define S_DEFAULT "default"    // Reset the system with the default settings
 
 // Running mode
 #define MODE_AUTO "auto"        // Run in automatic mode

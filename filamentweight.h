@@ -19,40 +19,41 @@
 #define DOUT 5  // load sensor data pin
 #define CLK 6   // load sensor clock pin
 
+#define STATUS_RESET 0      // After initialisation or reset
+#define STATUS_READY 1      // System ready
+#define STATUS_PRINTING 2   // Filament in use
+#define STATUS_LOAD 3       // Roll loaded
+#define STATS_STARTED 4     // Application started
+
+//! Status structure varoab;es amd flags
+typedef struct process {
+  //! The status of the entire process
+  int weightStatus;   
+  //! New status change has been shown
+  boolean weightStatusChangedShown;
+  //! Material characteristics flag indicator
+  boolean filamentMaterialChanged;
+  //! Extruder request based on the weight change due to the
+  //! filament tension
+  boolean weightExtruderTension;
+};
+
 /**
  * Class managing the load sensor
  */
 class FilamentWeight {
 
   public:
-    //! filament diameter (descriptive)
-    String diameter;
-    //! material type (descriptive)
-    String material;
-    //! roll weight (descriptive)
-    String weight;
-    //! system status
-    String stat;
-    //! Status ID
-    int statID;
-    //! grams for 1 cm material
-    float gr1cm;
-    //! centimeters for 1 gr material
-    float length1gr;
-    //! filament weight
-    float rollWeight;
-    //! roll tare
-    float rollTare;
+    //! Application status
+    process currentStatus;  
+    int wID;  // Filament weight ID
+    int diameterID; // Roll diameter
+    int materialID; // Roll material
+    int filament; // Filament type
     //! Last read value from the cell
     float lastRead;
     //! Previous read value from the cell
     float prevRead;
-    //! Initial read weight from last reset
-    float initialWeight;
-    //! Last reliable value for consumed grams
-    float lastConsumedGrams;
-    //! Units display flag. Decide if consume is in grams or cm
-    float filamentUnits;
 
     //! Load sensor library
     HX711 scale;
@@ -134,6 +135,35 @@ class FilamentWeight {
      */
     void showStat(void);
 
+    /**
+     * Update the materials IDs and calculations 
+     */
+    void calcMaterialCharacteristics(void);
+
+    //! filament diameter (descriptive)
+    String diameter;
+    //! material type (descriptive)
+    String material;
+    //! roll weight (descriptive)
+    String weight;
+    //! system status
+    String stat;
+    //! Status ID
+    int statID;
+    //! grams for 1 cm material
+    float gr1cm;
+    //! centimeters for 1 gr material
+    float length1gr;
+    //! filament weight
+    float rollWeight;
+    //! roll tare
+    float rollTare;
+    //! Initial read weight from last reset
+    float initialWeight;
+    //! Last reliable value for consumed grams
+    float lastConsumedGrams;
+    //! Units display flag. Decide if consume is in grams or cm
+    float filamentUnits;
 };
 
 #endif

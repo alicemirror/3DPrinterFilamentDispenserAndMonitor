@@ -31,6 +31,7 @@
 #define APP_TITLE "Balearic Dynamics 3D Printer Filament Monitor and Dispenser\nManual control Ver. 1.2.1"
 #endif
 
+#define TIT_MATERIAL "** Material **"
 #define CALIBRATING "Calibrating..."
 
 // Material type IDS
@@ -63,7 +64,7 @@
 // Status codes
 #define STAT_NONE 0
 #define STAT_READY 1
-#define STAT_PRINTING 2
+#define STAT_RUN 2
 #define STAT_LOAD 3
 
 #define DIAMETER175 "1.75 mm"

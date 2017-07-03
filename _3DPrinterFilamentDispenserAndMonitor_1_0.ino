@@ -80,6 +80,18 @@ void loop() {
   scale.prevRead = scale.lastRead;
   scale.lastRead = scale.readScale();
 
+  // Check if the material characteristics has changed
+  if(scale.currentStatus.filamentMaterialChanged) {
+    scale.showInfo();
+    scale.currentStatus.filamentMaterialChanged = false;
+  }
+
+  // Check if the status has changed
+  if(scale.currentStatus.weightStatusChangedShown) {
+    scale.showStat();
+    scale.currentStatus.weightStatusChangedShown = false;
+  }
+
   // Check for command availability for parsing
   if(Serial.available() > 0) {
     parseCommand(Serial.readString());
@@ -111,18 +123,12 @@ void loop() {
         break;
     } // switch
 
-//  // Manage the status change button
-//    if(digitalRead(SETZERO_PIN)) {
-//      delay(100); // Barbarian debouncer
 //        if(statID == STAT_NONE) {
 //          statID = STAT_READY;
 //          stat = SYS_READY;
 //          return;
 //        }
 //        if(statID == STAT_READY) {
-//          stat = SYS_LOAD;
-//          statID = STAT_LOAD;
-//          lcd.clear();
 //          return;
 //        } 
 //        if(statID == STAT_LOAD) {
@@ -141,8 +147,7 @@ void loop() {
 //          lcd.clear();
 //          return;
 //        }
-//  }
-//
+
 //  // Manage the partial consumption button. Only when STAT_PRINTING
 //  if(digitalRead(CHANGE_UNIT_PIN)) {
 //    delay(250); // Barbarian debouncer
@@ -169,40 +174,77 @@ void loop() {
   // Parameters settings
   if(commandString.equals(SET_PLA)) {
     Serial << CMD_SET << "'" << commandString << "'" << endl;
+    // Change the material type
+    scale.materialID = PLA;
+    // Set the flag to dispaly the changes next loop
+    scale.currentStatus.filamentMaterialChanged = true;
+    // Update the states IDs
+    scale.calcMaterialCharacteristics();
   }
   else if(commandString.equals(SET_ABS)) {
     Serial << CMD_SET << "'" << commandString << "'" << endl;
+    // Change the material type
+    scale.materialID = ABS;
+    // Set the flag to dispaly the changes next loop
+    scale.currentStatus.filamentMaterialChanged = true;
+    // Update the states IDs
+    scale.calcMaterialCharacteristics();
   }
   else if(commandString.equals(SET_175)) {
     Serial << CMD_SET << "'" << commandString << "'" << endl;
+    // Change the material type
+    scale.diameterID = DIAM_175;
+    // Set the flag to dispaly the changes next loop
+    scale.currentStatus.filamentMaterialChanged = true;
+    // Update the states IDs
+    scale.calcMaterialCharacteristics();
   }
   else if(commandString.equals(SET_300)) {
     Serial << CMD_SET << "'" << commandString << "'" << endl;
+    // Change the material type
+    scale.diameterID = DIAM_300;
+    // Set the flag to dispaly the changes next loop
+    scale.currentStatus.filamentMaterialChanged = true;
+    // Update the states IDs
+    scale.calcMaterialCharacteristics();
   }
   else if(commandString.equals(SET_1KG)) {
     Serial << CMD_SET << "'" << commandString << "'" << endl;
+    // Change the material type
+    scale.wID = ROLL1KG;
+    // Set the flag to dispaly the changes next loop
+    scale.currentStatus.filamentMaterialChanged = true;
+    // Update the states IDs
+    scale.calcMaterialCharacteristics();
   }
   else if(commandString.equals(SET_2KG)) {
     Serial << CMD_SET << "'" << commandString << "'" << endl;
-  }
-  // Change behaviour mode
-  else if(commandString.equals(MODE_AUTO)) {
-    Serial << CMD_MODE << "'" << commandString << "'" << endl;
-  }
-  else if(commandString.equals(MODE_MANUAL)) {
-    Serial << CMD_MODE << "'" << commandString << "'" << endl;
+    // Change the material type
+    scale.wID = ROLL2KG;
+    // Set the flag to dispaly the changes next loop
+    scale.currentStatus.filamentMaterialChanged = true;
+    // Update the states IDs
+    scale.calcMaterialCharacteristics();
   }
   // Change current functional status
-  else if(commandString.equals(STATUS_RESET)) {
+  else if(commandString.equals(S_RESET)) {
+    // Reset command does not matter the previous state and is 
+    // executed anyway.
+    Serial << CMD_STATUS << "'" << commandString << "'" << endl;
+    scale.setDefaults();
+    // Set the flag to dispplay the new status in the next loop
+    scale.currentStatus.weightStatusChangedShown = true;
+  }
+  else if(commandString.equals(S_LOAD)) {
+    scale.stat = SYS_LOAD;
+    scale.statID = STAT_LOAD;
+    scale.initialWeight = scale.lastRead;
     Serial << CMD_STATUS << "'" << commandString << "'" << endl;
   }
-  else if(commandString.equals(STATUS_LOAD)) {
+  else if(commandString.equals(S_RUN)) {
     Serial << CMD_STATUS << "'" << commandString << "'" << endl;
   }
-  else if(commandString.equals(STATUS_RUN)) {
-    Serial << CMD_STATUS << "'" << commandString << "'" << endl;
-  }
-  else if(commandString.equals(STATUS_DEFAULT)) {
+  else if(commandString.equals(S_DEFAULT)) {
     Serial << CMD_STATUS << "'" << commandString << "'" << endl;
   }  
   // Informative commands
@@ -234,6 +276,13 @@ void loop() {
   }
   else if(commandString.equals(MOTOR_PULL_CONT)) {
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+  }
+  // Change behaviour mode
+  else if(commandString.equals(MODE_AUTO)) {
+    Serial << CMD_MODE << "'" << commandString << "'" << endl;
+  }
+  else if(commandString.equals(MODE_MANUAL)) {
+    Serial << CMD_MODE << "'" << commandString << "'" << endl;
   }
 #endif
   // Not a valid command
