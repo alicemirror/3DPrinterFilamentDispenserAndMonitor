@@ -11,17 +11,29 @@
 #include "filamentweight.h"
 
 void FilamentWeight::begin(void) {
-  scale.begin(DOUT, CLK);
+  scaleSensor.begin(DOUT, CLK);
+  // Used by two pass calibration only
+  cal3Pass = 0;
+  scaleCalibration = SCALE_CALIBRATION;
+  isCalibrating = false;
   // Initialise the scale with the model calibration factor then set the initial weight to 0
-  scale.set_scale(SCALE_CALIBRATION);
-  scale.tare();
+  scaleSensor.set_scale(scaleCalibration);
+  scaleSensor.tare();
   // Initialised the default values for the default filament type
   setDefaults();
   showInfo();
 }
 
+void FilamentWeight::reset(void) {
+  scaleSensor.set_scale(scaleCalibration);
+  scaleSensor.tare();
+  setDefaults();
+}
+
 float FilamentWeight::readScale(void) {
-  return (scale.get_units(SCALE_SAMPLES) * -1) - rollTare;
+  prevRead = lastRead;
+  lastRead = scaleSensor.get_units(SCALE_SAMPLES);
+  return (lastRead);
 }
 
 void FilamentWeight::setDefaults(void) {
@@ -127,37 +139,61 @@ float FilamentWeight::calcRemainingPerc(float w) {
 }
 
 void FilamentWeight::showInfo(void) {
-  Serial << endl << TIT_MATERIAL << endl;
-  Serial << material << " " << diameter << " " << weight << " " << UNITS_KG << endl;
-  Serial << stat << endl << endl;
+  Serial.print(TIT_MATERIAL);
+  Serial.print(material);
+  Serial.print(" ");
+  Serial.print(diameter);
+  Serial.print(" ");
+  Serial.print(weight);
+  Serial.print(" ");
+  Serial.println(UNITS_KG);
+  Serial.println(stat);
 }
 
 void FilamentWeight::showLoad(void) {
-  Serial << endl << TIT_LOAD << endl;
-  Serial << material << " " << diameter << " " << weight << " " << UNITS_KG << endl;
-  Serial << stat << " " << calcRemainingPerc(lastRead) << "%" << endl << endl;
+  Serial.println(TIT_LOAD);
+  Serial.print(calcRemainingPerc(lastRead));
+  Serial.println("%");
 }
 
 void FilamentWeight::showConfig(void) {
-  Serial << endl << TIT_CONFIG << endl;
+  Serial.println( TIT_CONFIG);
   // Show load status
-  Serial << FILAMENT_ROLL<< material << endl << diameter << " " << weight << " " << UNITS_KG << endl;
-  Serial << stat << " " << calcRemainingPerc(lastRead) << "%" << endl;
+  Serial.print(calcRemainingPerc(lastRead));
+  Serial.println("%");
   // Show last and previous read values
-  Serial << "Last read: " << lastRead << " Previous read:" << prevRead << endl;
+  Serial.print("Last read: ");
+  Serial.print(lastRead);
   // Show internal settings
-  Serial << "Scale calibration: " << SCALE_CALIBRATION << UNITS_GR << " resolution: " << SCALE_RESOLUTION << UNITS_GR << " readings: " << SCALE_SAMPLES << endl;
-  Serial << "Spool weight: " << rollTare << UNITS_GR << endl;
-  if(filamentUnits == _GR) {
-    Serial << "Units in: " << UNITS_GR << endl;
-  }
-  else {
-    Serial << "Units in: " << UNITS_GR << endl;
-  }
+  Serial.print("Calib.: ");
+  Serial.print(scaleCalibration);
+  Serial.println("units/gr");
 }
 
 float FilamentWeight::getWeight(void) {
-  return lastRead * -1;
+  return scaleSensor.get_units(SCALE_SAMPLES);
+}
+
+void FilamentWeight::calibrate3Pass(void) {
+  // First pass calibration
+  if(cal3Pass == 0) {
+    isCalibrating = true;
+    scaleSensor.set_scale();
+    scaleSensor.tare(); 
+    cal3Pass++;
+  }
+  // Second pass calibration
+  else if(cal3Pass == 1) {
+    scaleCalibration = scaleSensor.get_units(CALIBRATION_STEPS);
+    cal3Pass++;
+  }
+  // Third pass calibration
+  else if(cal3Pass == 2) {
+    scaleCalibration = scaleCalibration / knownWeight;
+    isCalibrating = false;
+    cal3Pass = 0;
+    reset();
+  }
 }
 
 void FilamentWeight::showStat(void) {
@@ -170,11 +206,15 @@ void FilamentWeight::showStat(void) {
   else
     lastConsumedGrams = consumedGrams;
   
-  Serial << calcGgramsToCentimeters(lastRead)/100 << " " << UNITS_MT << " " << calcRemainingPerc(lastRead) << "%" << endl;
+//  Serial.print(calcGgramsToCentimeters(lastRead)/100);
+//  Serial.println(UNITS_MT);
+//  Serial.print(calcRemainingPerc(lastRead));
+//  Serial.println("%");
 
   // Select the representation uinit
   if(filamentUnits == _GR) {
-    Serial << stat << " " << valOptimizer(consumedGrams) << " " << UNITS_GR << "  ";
+    Serial.print(valOptimizer(consumedGrams));
+    Serial.println(UNITS_GR);
   } // Units in weight
   else {
     // Show the length in centimeters until one meter then show in meters
@@ -183,12 +223,13 @@ void FilamentWeight::showStat(void) {
     loadedCentimeters = calcGgramsToCentimeters(consumedGrams);
     // Select the length representation
     if(loadedCentimeters > CENTIMETERS_PER_METER) {
-      Serial << stat << " " << loadedCentimeters/CENTIMETERS_PER_METER << " " << UNITS_MT << endl;
+      Serial.print(loadedCentimeters/CENTIMETERS_PER_METER);
+      Serial.println(UNITS_MT);
     } // ... in meters
     else {
-      Serial << stat << " " << valOptimizer(loadedCentimeters) << " " << UNITS_CM << endl;
+      Serial.print(valOptimizer(loadedCentimeters));
+      Serial.println(UNITS_CM);
     } // ... in centimeters
   } // Units in length
 }
-
 

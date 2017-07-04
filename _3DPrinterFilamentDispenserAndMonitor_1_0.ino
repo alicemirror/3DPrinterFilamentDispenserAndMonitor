@@ -14,7 +14,6 @@
 
 */
 
-#include <Streaming.h>
 #include "filament.h"
 #include "filamentweight.h"
 #include "commands.h"
@@ -39,8 +38,8 @@ void setup() {
   Serial.begin(38400);
 
   // Print the initialisation message
-  Serial << APP_TITLE << endl;
-  Serial << CALIBRATING << endl;
+  Serial.println(APP_TITLE);
+  Serial.println(CALIBRATING);
 
   // Set the dip switch pins
   pinMode(READING_PIN, OUTPUT);   // LED reading signal
@@ -63,8 +62,11 @@ void setup() {
  */
 void loop() {
   // Get the last reading
+  digitalWrite(READING_PIN, HIGH);
   scale.prevRead = scale.lastRead;
   scale.lastRead = scale.readScale();
+//  Serial << "lastRead=" << scale.lastRead << endl;
+  digitalWrite(READING_PIN, LOW);
 
   // Check if the material characteristics has changed
   if(scale.currentStatus.filamentMaterialChanged) {
@@ -85,10 +87,16 @@ void loop() {
     }
   }
 
-  // Check for command availability for parsing
-  if(Serial.available() > 0) {
+  if(Serial.available() > 0){
     parseCommand(Serial.readString());
-  }
+  } // serial available
+}
+
+//! Send a single line message to the serial
+void serialMessage(String title, String description) {
+    Serial.print(title);
+    Serial.print(" ");
+    Serial.println(description);
 }
 
 /**
@@ -97,6 +105,7 @@ void loop() {
  * \param commandString the string coming from the serial
  */
  void parseCommand(String commandString) {
+
   // =========================================================
   // Parameters settings
   // =========================================================
@@ -104,9 +113,6 @@ void loop() {
   // Set PLA material and recalculate the material characteristics
   // Flag is set to display an update nesxt loop cycle
   if(commandString.equals(SET_PLA)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_SET << "'" << commandString << "'" << endl;
-#endif
     scale.materialID = PLA;
     scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
@@ -114,9 +120,6 @@ void loop() {
   // Set ABS material and recalculate the material characteristics
   // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_ABS)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_SET << "'" << commandString << "'" << endl;
-#endif
     scale.materialID = ABS;
     scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
@@ -124,9 +127,6 @@ void loop() {
   // Set 1.75 mm filament diameter and recalculate the material characteristics
   // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_175)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_SET << "'" << commandString << "'" << endl;
-#endif
     scale.diameterID = DIAM_175;
     scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
@@ -134,9 +134,6 @@ void loop() {
   // Set 3.00 mm filament diameter and recalculate the material characteristics
   // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_300)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_SET << "'" << commandString << "'" << endl;
-#endif
     scale.diameterID = DIAM_300;
     scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
@@ -144,9 +141,6 @@ void loop() {
   // Set 1kg filament spool and recalculate the material characteristics
   // Flag is set to display an update next loop cycle
   else if(commandString.equals(SET_1KG)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_SET << "'" << commandString << "'" << endl;
-#endif
     scale.wID = ROLL1KG;
     scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
@@ -154,21 +148,18 @@ void loop() {
   // Set 2kg filament spool and recalculate the material characteristics
   // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_2KG)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_SET << "'" << commandString << "'" << endl;
-#endif
     scale.wID = ROLL2KG;
     scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
   }
   // Set units in grams
   else if(commandString.equals(SET_WEIGHT)) {
-    Serial << CMD_UNITS << " " << commandString << endl;
+    serialMessage(CMD_UNITS, commandString);
     scale.filamentUnits = _GR;
   }
   // Set units in cm
   else if(commandString.equals(SET_CENTIMETERS)) {
-    Serial << CMD_UNITS << " " << commandString << endl;
+    serialMessage(CMD_UNITS, commandString);
     scale.filamentUnits = _CM;
   }
 
@@ -182,22 +173,16 @@ void loop() {
   // This command had mandatory executi9on and ignore the previous state
   // The flag is set to show an update nextg loop cycle
   else if(commandString.equals(S_RESET)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_STATUS << "'" << commandString << "'" << endl;
-#endif
-    scale.setDefaults();
+    scale.reset();
     scale.stat = SYS_READY;
     scale.statID = STAT_READY;
-    scale.currentStatus.weightStatusChangedShown = true;
+    scale.currentStatus.filamentMaterialChanged = true;
   }
   // Send a load command status setting
   // Should be executed after the filament roll has been set 
   // and placed on the scale base or after a reset command
   // The flag is set to show an update nextg loop cycle
   else if(commandString.equals(S_LOAD)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_STATUS << "'" << commandString << "'" << endl;
-#endif
     scale.stat = SYS_LOAD;
     scale.statID = STAT_LOAD;
     scale.initialWeight = scale.lastRead;
@@ -206,9 +191,6 @@ void loop() {
   // Send a run command status setting
   // Should be sent when a print job is started
   else if(commandString.equals(S_RUN)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_STATUS << "'" << commandString << "'" << endl;
-#endif
     scale.stat = SYS_RUN;
     scale.statID = STAT_RUN;
     scale.currentStatus.weightStatusChangedShown = true;
@@ -219,9 +201,6 @@ void loop() {
   // tare and calculations but the current status is not changed.
   // Use this commmand to reset the material to the internal conditions
   else if(commandString.equals(S_DEFAULT)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_STATUS << "'" << commandString << "'" << endl;
-#endif
     scale.setDefaults();
     scale.currentStatus.filamentMaterialChanged = true;
   }  
@@ -231,26 +210,19 @@ void loop() {
   // =========================================================
 
   else if(commandString.equals(SHOW_INFO)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
-#endif
-  scale.showInfo();
+    scale.showInfo();
   }
   else if(commandString.equals(SHOW_STATUS)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
-#endif
-  scale.showLoad();
-  scale.showStat();
+    scale.showLoad();
+    scale.showStat();
   }
   else if(commandString.equals(SHOW_DUMP)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
-#endif
-  scale.showConfig();
+    scale.showConfig();
   }
   else if(commandString.equals(SHOW_WEIGHT)) {
-    Serial << CMD_CMD << commandString << " = " << scale.getWeight() << UNITS_GR << endl;
+    Serial.print(CMD_WEIGHT);
+    Serial.print(scale.getWeight());
+    Serial.println(UNITS_GR);
   }
 
   // =========================================================
@@ -259,48 +231,64 @@ void loop() {
 
 #ifdef _USE_MOTOR
   else if(commandString.equals(MOTOR_FEED)) {
-    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
-      motor.feedExtruder(FEED_EXTRUDER_DELAY);
-      motor.tleDiagnostic();
+    serialMessage(CMD_EXEC, commandString);
+    motor.feedExtruder(FEED_EXTRUDER_DELAY);
+    motor.tleDiagnostic();
   }
   else if(commandString.equals(MOTOR_PULL)) {
-    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
-      motor.filamentLoad(FEED_EXTRUDER_DELAY);
-      motor.tleDiagnostic();
+    serialMessage(CMD_EXEC, commandString);
+    motor.filamentLoad(FEED_EXTRUDER_DELAY);
+    motor.tleDiagnostic();
   }
   else if(commandString.equals(MOTOR_STOP)) {
-    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+    serialMessage(CMD_EXEC, commandString);
     motor.motorBrake();
     motor.tleDiagnostic();
   }
   else if(commandString.equals(MOTOR_FEED_CONT)) {
-    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+    serialMessage(CMD_EXEC, commandString);
     motor.filamentContFeed();
   }
   else if(commandString.equals(MOTOR_PULL_CONT)) {
-    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
+    serialMessage(CMD_EXEC, commandString);
     motor.filamentContLoad();
   }
+#endif
+
+  // =========================================================
+  // Calibration - Not working :-(
+  // =========================================================
+//  if( (commandString.equals(MANUAL_CALIBRATION)) || (scale.isCalibrating == true) ) {
+//      switch(scale.cal3Pass) {
+//        case 0:
+//          scale.isCalibrating = true;
+//          scale.calibrate3Pass();
+//          Serial.println("Pass 1 done.");
+//        break;
+//        case 1:
+//          scale.calibrate3Pass();
+//          Serial.println("Pass 2 done.");
+//        break;
+//        case 2:
+//          scale.knownWeight = commandString.toFloat();
+//          scale.calibrate3Pass();
+//          scale.showConfig();
+//          Serial.println("Pass 3 done.");
+//        break;
+//      } // calibration steps
+//  }
 
   // =========================================================
   // Change behaviour mode
   // =========================================================
 
   else if(commandString.equals(MODE_AUTO)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_MODE << "'" << commandString << "'" << endl;
-#endif
+    serialMessage(CMD_MODE, commandString);
   }
   else if(commandString.equals(MODE_MANUAL)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_MODE << "'" << commandString << "'" << endl;
-#endif
+    serialMessage(CMD_MODE, commandString);
   }
-#endif
-  // Not a valid command
-  // This is the only command response that is shown also when
-  // debug is not set
-  else
-    Serial << CMD_NOCMD << "'" << commandString << "'" << endl;
+//  else
+//    serialMessage(CMD_WRONGCMD, commandString);
  }
 

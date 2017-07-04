@@ -23,25 +23,18 @@
 #ifndef _FILAMENT
 #define _FILAMENT
 
-//! Define infineon if you are using the XMC1100 board
-//! (for future developments)
-#define _INFINEON
 //! Define motor is using the automatic dispenser
 #define _USE_MOTOR
 
 #undef _DEBUG_FILAMENT
 
 //! Application title shown on startup
-#ifdef _USE_MOTOR
-#define APP_TITLE "Balearic Dynamics 3D Printer Filament Monitor and Dispenser\nMotor control Ver. 1.2.1"
-#else
-#define APP_TITLE "Balearic Dynamics 3D Printer Filament Monitor and Dispenser\nManual control Ver. 1.2.1"
-#endif
+#define APP_TITLE "Balearic Dynamics Ver. 1.2.1"
 
-#define TIT_MATERIAL "** Material **"
+#define TIT_MATERIAL "Material"
 #define CALIBRATING "Calibrating..."
-#define TIT_CONFIG "** Current configuration **"
-#define TIT_LOAD "** Loaded status **"
+#define TIT_CONFIG "Configuration"
+#define TIT_LOAD "Status"
 
 // Material type IDs
 #define PLA 0
@@ -110,7 +103,7 @@
 //! Length in cm for 1 gr 3.00 mm ABS filament
 #define ABS300_1GR_CM 13.0
 //! Weight in gr for 1 cm 3.00 mm ABS filament
-#define ABS175_1CM_GR 0.076
+#define ABS300_1CM_GR 0.076
 
 //! 1Kg Roll spool average weight in gr (tare)
 //! We assume that the plastic empty roll weight is
@@ -122,12 +115,15 @@
 //! used 3D printed model
 #define SCALE_CALIBRATION 428.0
 
+//! Numer of reading steps used by the three pass manual calibration
+#define CALIBRATION_STEPS 10
+
 //! Minimum weight difference between two updates in grams
 #define SCALE_RESOLUTION 0.15
 
 //! Number of samples read every weight reading. 
 //! Multiple samples reading gives more stability to the measure
-#define SCALE_SAMPLES 5
+#define SCALE_SAMPLES 10
 
 //! Minimum number of grams variation between two reading too high
 //! to be considered weight change (tension by the Extruder)

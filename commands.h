@@ -21,7 +21,8 @@
 #define CMD_MODE "***CMD : set mode to "
 #define CMD_UNITS "***CMD : set units to "
 #define CMD_STATUS "***CMD : set status to "
-#define CMD_CMD "***CMD : "
+#define CMD_WEIGHT "WEIGHT = "
+#define CMD_WRONGCMD "***ERR : wrong value "
 
 // Filament setup
 #define SET_PLA "PLA"
@@ -34,6 +35,9 @@
 // Units settings
 #define SET_WEIGHT "gr"
 #define SET_CENTIMETERS "cm"
+
+// Calibration process
+#define MANUAL_CALIBRATION "calibration"
 
 // Status change
 #define S_RESET "reset"        // Reset the system with the current filament setup
