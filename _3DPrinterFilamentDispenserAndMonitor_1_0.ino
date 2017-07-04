@@ -34,11 +34,11 @@ FilamentWeight scale;
 // ==============================================
 void setup() {
   // Serial is initialised at high speed. If your Arduino boards
-  // loose characters of show unwanted/unexpected behavior
+  // loose characters or show unwanted/unexpected behavior
   // try with a lower communication speed
-  Serial.begin(9600);
+  Serial.begin(38400);
 
-  // Print a message to the LCD.
+  // Print the initialisation message
   Serial << APP_TITLE << endl;
   Serial << CALIBRATING << endl;
 
@@ -78,27 +78,18 @@ void loop() {
     scale.currentStatus.weightStatusChangedShown = false;
   }
 
+  // Check if the motor is running to test the errors status
+  if(motor.internalStatus.isRunning) {
+    if(motor.tleCheckDiagnostic()) {
+      motor.tleDiagnostic();
+    }
+  }
+
   // Check for command availability for parsing
   if(Serial.available() > 0) {
     parseCommand(Serial.readString());
   }
-
-  digitalWrite(READING_PIN, HIGH); // LED Enable
-
-//  // Manage the partial consumption button. Only when STAT_PRINTING
-//  if(digitalRead(CHANGE_UNIT_PIN)) {
-//    delay(250); // Barbarian debouncer
-//    if(filamentUnits == _GR) {
-//      filamentUnits = _CM;
-//    }
-//    else {
-//      filamentUnits = _GR;
-//    }
-//  }
-
-  digitalWrite(READING_PIN, LOW);
 }
-
 
 /**
  * Parse the command string and echo the executing message or command unknown error.
@@ -106,8 +97,6 @@ void loop() {
  * \param commandString the string coming from the serial
  */
  void parseCommand(String commandString) {
-  boolean cmdOk = false;
-
   // =========================================================
   // Parameters settings
   // =========================================================
@@ -153,7 +142,7 @@ void loop() {
     scale.calcMaterialCharacteristics();
   }
   // Set 1kg filament spool and recalculate the material characteristics
-  // Flag is set to display an update nesxt loop cycle
+  // Flag is set to display an update next loop cycle
   else if(commandString.equals(SET_1KG)) {
 #ifdef _DEBUG_COMMANDS
     Serial << CMD_SET << "'" << commandString << "'" << endl;
@@ -171,6 +160,16 @@ void loop() {
     scale.wID = ROLL2KG;
     scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
+  }
+  // Set units in grams
+  else if(commandString.equals(SET_WEIGHT)) {
+    Serial << CMD_UNITS << " " << commandString << endl;
+    scale.filamentUnits = _GR;
+  }
+  // Set units in cm
+  else if(commandString.equals(SET_CENTIMETERS)) {
+    Serial << CMD_UNITS << " " << commandString << endl;
+    scale.filamentUnits = _CM;
   }
 
   // =========================================================
@@ -231,25 +230,27 @@ void loop() {
   // Informative commands
   // =========================================================
 
-  else if(commandString.equals(SHOW_SETTINGS)) {
+  else if(commandString.equals(SHOW_INFO)) {
 #ifdef _DEBUG_COMMANDS
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
 #endif
+  scale.showInfo();
   }
   else if(commandString.equals(SHOW_STATUS)) {
 #ifdef _DEBUG_COMMANDS
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
 #endif
+  scale.showLoad();
+  scale.showStat();
   }
   else if(commandString.equals(SHOW_DUMP)) {
 #ifdef _DEBUG_COMMANDS
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
 #endif
+  scale.showConfig();
   }
   else if(commandString.equals(SHOW_WEIGHT)) {
-#ifdef _DEBUG_COMMANDS
-    Serial << CMD_EXEC << "'" << commandString << "'" << endl;
-#endif
+    Serial << CMD_CMD << commandString << " = " << scale.getWeight() << UNITS_GR << endl;
   }
 
   // =========================================================

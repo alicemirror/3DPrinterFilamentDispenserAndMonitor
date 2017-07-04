@@ -136,6 +136,16 @@ class FilamentWeight {
     void showStat(void);
 
     /**
+     * Show the configuration and system settings
+     */
+     void showConfig(void);
+
+     /**
+      * Return the last value read from the sensor
+      */
+     float getWeight(void);
+     
+    /**
      * Update the materials IDs and calculations 
      */
     void calcMaterialCharacteristics(void);

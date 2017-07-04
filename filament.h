@@ -40,6 +40,8 @@
 
 #define TIT_MATERIAL "** Material **"
 #define CALIBRATING "Calibrating..."
+#define TIT_CONFIG "** Current configuration **"
+#define TIT_LOAD "** Loaded status **"
 
 // Material type IDs
 #define PLA 0
@@ -81,7 +83,7 @@
 #define CENTIMETERS_PER_METER 100
 
 // Units
-#define UNITS_GR "g"
+#define UNITS_GR "gr"
 #define UNITS_CM "cm"
 #define UNITS_MT "m"
 #define UNITS_KG "Kg"

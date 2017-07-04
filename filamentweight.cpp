@@ -129,12 +129,35 @@ float FilamentWeight::calcRemainingPerc(float w) {
 void FilamentWeight::showInfo(void) {
   Serial << endl << TIT_MATERIAL << endl;
   Serial << material << " " << diameter << " " << weight << " " << UNITS_KG << endl;
-  Serial << stat << endl;
+  Serial << stat << endl << endl;
 }
 
 void FilamentWeight::showLoad(void) {
+  Serial << endl << TIT_LOAD << endl;
   Serial << material << " " << diameter << " " << weight << " " << UNITS_KG << endl;
+  Serial << stat << " " << calcRemainingPerc(lastRead) << "%" << endl << endl;
+}
+
+void FilamentWeight::showConfig(void) {
+  Serial << endl << TIT_CONFIG << endl;
+  // Show load status
+  Serial << FILAMENT_ROLL<< material << endl << diameter << " " << weight << " " << UNITS_KG << endl;
   Serial << stat << " " << calcRemainingPerc(lastRead) << "%" << endl;
+  // Show last and previous read values
+  Serial << "Last read: " << lastRead << " Previous read:" << prevRead << endl;
+  // Show internal settings
+  Serial << "Scale calibration: " << SCALE_CALIBRATION << UNITS_GR << " resolution: " << SCALE_RESOLUTION << UNITS_GR << " readings: " << SCALE_SAMPLES << endl;
+  Serial << "Spool weight: " << rollTare << UNITS_GR << endl;
+  if(filamentUnits == _GR) {
+    Serial << "Units in: " << UNITS_GR << endl;
+  }
+  else {
+    Serial << "Units in: " << UNITS_GR << endl;
+  }
+}
+
+float FilamentWeight::getWeight(void) {
+  return lastRead * -1;
 }
 
 void FilamentWeight::showStat(void) {
