@@ -14,7 +14,9 @@ void MotorControl::begin(void) {
   // enable tle94112
   tle94112.begin();
 
-  // Disale the unused half bridges
+  internalStatus.isRunning = false;
+
+  // Disable the unused half bridges
   #ifdef _HIGHCURRENT
     // High current mode, keep in use HB1&2, 3&4
     tle94112.configHB(tle94112.TLE_HB5, tle94112.TLE_FLOATING, tle94112.TLE_NOPWM);
@@ -46,25 +48,33 @@ void MotorControl::end(void) {
 
 void MotorControl::feedExtruder(long duration) {
   motorRun(DC_MIN_EXTRUDER, DC_MAX_EXTRUDER, ACCELERATION_DELAY, duration, DIRECTION_FEED);
-  // motorStop() can be used as an alternative
   motorBrake();
 }
 
 void MotorControl::filamentFeed(long duration) {
   motorRun(DC_MIN_MANUAL_FFED, DC_MAX_MANUAL_FFED, ACCELERATION_DELAY, duration, DIRECTION_FEED);
-  // motorStop() can be used as an alternative
   motorBrake();
+}
+
+void MotorControl::filamentContFeed(void) {
+  motorStart(DC_MIN_MANUAL_FFED, DC_MAX_MANUAL_FFED, ACCELERATION_DELAY, DIRECTION_FEED);
 }
 
 void MotorControl::filamentLoad(long duration) {
   motorRun(DC_MIN_MANUAL_LOAD, DC_MAX_MANUAL_LOAD, ACCELERATION_DELAY, duration, DIRECTION_LOAD);
-  // motorStop() can be used as an alternative
   motorBrake();
+}
+
+void MotorControl::filamentContLoad(void) {
+  motorStart(DC_MIN_MANUAL_FFED, DC_MAX_MANUAL_FFED, ACCELERATION_DELAY, DIRECTION_LOAD);
 }
 
 void MotorControl::motorRun(int minDC, int maxDC, int accdelay, long duration, int motorDirection) {
   int j;
 
+  // If the motor is already running it is stopped before starting again
+  if(internalStatus.isRunning)
+    motorBrake();
   // Check for the direction
   if(motorDirection == DIRECTION_FEED) {
 #ifdef _HIGHCURRENT
@@ -131,28 +141,77 @@ void MotorControl::motorRun(int minDC, int maxDC, int accdelay, long duration, i
   }
 }
 
-void MotorControl::motorStop(void) {
-  // Stop the motor
-  tle94112.configPWM(tle94112.TLE_PWM1, tle94112.TLE_FREQ200HZ, 0);
+void MotorControl::motorStart(int minDC, int maxDC, int accdelay, int motorDirection) {
+  int j;
+  // If the motor is already running it is stopped before starting again
+  if(internalStatus.isRunning)
+    motorBrake();
+  // Set the motor status
+  internalStatus.isRunning = true;
+  internalStatus.minDC = minDC;
+  internalStatus.maxDC = maxDC;
+  internalStatus.accdelay = accdelay;
+  internalStatus.motorDirection = motorDirection;
+
+  // Check for the direction
+  if(motorDirection == DIRECTION_FEED) {
 #ifdef _HIGHCURRENT
-  tle94112.configHB(tle94112.TLE_HB1, tle94112.TLE_FLOATING, tle94112.TLE_NOPWM);
-  tle94112.configHB(tle94112.TLE_HB2, tle94112.TLE_FLOATING, tle94112.TLE_NOPWM);
-  tle94112.configHB(tle94112.TLE_HB3, tle94112.TLE_FLOATING, tle94112.TLE_NOPWM);
-  tle94112.configHB(tle94112.TLE_HB4, tle94112.TLE_FLOATING, tle94112.TLE_NOPWM);
+    tle94112.configHB(tle94112.TLE_HB1, tle94112.TLE_HIGH, tle94112.TLE_PWM1);
+    tle94112.configHB(tle94112.TLE_HB2, tle94112.TLE_HIGH, tle94112.TLE_PWM1);
+    tle94112.configHB(tle94112.TLE_HB3, tle94112.TLE_LOW, tle94112.TLE_NOPWM);
+    tle94112.configHB(tle94112.TLE_HB4, tle94112.TLE_LOW, tle94112.TLE_NOPWM);
 #else
-  tle94112.configHB(tle94112.TLE_HB1, tle94112.TLE_FLOATING, tle94112.TLE_NOPWM);
-  tle94112.configHB(tle94112.TLE_HB2, tle94112.TLE_FLOATING, tle94112.TLE_NOPWM);
+    tle94112.configHB(tle94112.TLE_HB1, tle94112.TLE_HIGH, tle94112.TLE_PWM1);
+    tle94112.configHB(tle94112.TLE_HB2, tle94112.TLE_LOW, tle94112.TLE_NOPWM);
 #endif
-  //Check for error
-  if(tleCheckDiagnostic()) {
-#ifdef _MOTORDEBUG
-    Serial.println("from motorStop()");
-#endif
-    tleDiagnostic();
   }
+  else {
+#ifdef _HIGHCURRENT
+    tle94112.configHB(tle94112.TLE_HB1, tle94112.TLE_LOW, tle94112.TLE_NOPWM);
+    tle94112.configHB(tle94112.TLE_HB2, tle94112.TLE_LOW, tle94112.TLE_NOPWM);
+    tle94112.configHB(tle94112.TLE_HB3, tle94112.TLE_HIGH, tle94112.TLE_PWM1);
+    tle94112.configHB(tle94112.TLE_HB4, tle94112.TLE_HIGH, tle94112.TLE_PWM1);
+#else
+    tle94112.configHB(tle94112.TLE_HB1, tle94112.TLE_LOW, tle94112.TLE_NOPWM);
+    tle94112.configHB(tle94112.TLE_HB2, tle94112.TLE_HIGH, tle94112.TLE_PWM1);
+#endif
+  }
+
+  // Acceleration loop  
+  for(j = minDC; j <= maxDC; j++) {
+    // Update the speed
+    tle94112.configPWM(tle94112.TLE_PWM1, tle94112.TLE_FREQ200HZ, j);
+    //Check for error
+    if(tleCheckDiagnostic()) {
+#ifdef _MOTORDEBUG
+      Serial.print("from motorRun() acceleration loop, DC = ");
+      Serial.println(j);
+#endif
+      tleDiagnostic();
+    }
+    delay(accdelay);
+  }
+
+  tle94112.configPWM(tle94112.TLE_PWM1, tle94112.TLE_FREQ200HZ, maxDC);
 }
 
 void MotorControl::motorBrake(void) {
+  // If motor is running then it decelerates before stop
+  if(internalStatus.isRunning) {
+    int j;
+    // Deceleration loop  
+    for(j = internalStatus.maxDC; j > internalStatus.minDC; j--) {
+      // Update the speed
+      tle94112.configPWM(tle94112.TLE_PWM1, tle94112.TLE_FREQ200HZ, j);
+    //Check for error
+    if(tleCheckDiagnostic()) {
+      tleDiagnostic();
+    }
+      delay(internalStatus.accdelay);
+    }
+    // Update the motor status
+    internalStatus.isRunning = false;
+  }
 #ifdef _HIGHCURRENT
   // High current configuration, uses HB1&2 + 3&4
   tle94112.configHB(tle94112.TLE_HB1, tle94112.TLE_HIGH, tle94112.TLE_NOPWM);

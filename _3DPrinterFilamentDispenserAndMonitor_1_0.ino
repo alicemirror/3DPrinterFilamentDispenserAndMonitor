@@ -268,19 +268,17 @@ void loop() {
       motor.tleDiagnostic();
   }
   else if(commandString.equals(MOTOR_STOP)) {
-#ifdef _DEBUG_COMMANDS
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
-#endif
+    motor.motorBrake();
+    motor.tleDiagnostic();
   }
   else if(commandString.equals(MOTOR_FEED_CONT)) {
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
-    motor.filamentFeed(FEED_EXTRUDER_DELAY*10);
-    motor.tleDiagnostic();
+    motor.filamentContFeed();
   }
   else if(commandString.equals(MOTOR_PULL_CONT)) {
     Serial << CMD_EXEC << "'" << commandString << "'" << endl;
-    motor.filamentLoad(FEED_EXTRUDER_DELAY*10);
-    motor.tleDiagnostic();
+    motor.filamentContLoad();
   }
 
   // =========================================================

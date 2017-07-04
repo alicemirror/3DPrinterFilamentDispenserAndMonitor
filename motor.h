@@ -26,10 +26,10 @@
 
 //! For high current coupling half bridges together 1&2, 3&4
 #undef _HIGHCURRENT
-
 #undef _MOTORDEBUG
 
 //! Avoid too many openload error messages when starting acceleration
+//! by default it is ignored
 #define _IGNORE_OPENLOAD
 
 // Duty cycles with PWM 200 Hz
