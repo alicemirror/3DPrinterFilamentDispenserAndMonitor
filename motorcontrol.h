@@ -6,7 +6,8 @@
  *  \author Enrico Miglino <balearicdynamics@gmail.com> \n
  *  Balearic Dynamics sl <www.balearicdynamics.com> SPAIN
  *  \date July 2017
- *  \version 1.0 beta
+ *  \version 1.0 Release Candidate
+ *  Licensed under GNU LGPL 3.0
  */
 
 #ifndef _MOTORCONTROL

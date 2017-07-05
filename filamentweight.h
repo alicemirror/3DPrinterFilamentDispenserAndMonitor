@@ -5,7 +5,8 @@
  *  \author Enrico Miglino <balearicdynamics@gmail.com> \n
  *  Balearic Dynamics sl <www.balearicdynamics.com> SPAIN
  *  \date July 2017
- *  \version 1.0 beta
+ *  \version 1.0 Release Candidate
+ *  Licensed under GNU LGPL 3.0
  */
 
 #ifndef _FILAMENTWEIGHT
@@ -15,8 +16,8 @@
 #include "filament.h"
 #include "commands.h"
 
-#define DOUT 5  // load sensor data pin
-#define CLK 6   // load sensor clock pin
+#define DOUT 3  // load sensor data pin
+#define CLK 4   // load sensor clock pin
 
 #define STATUS_RESET 0      ///< After initialisation or reset
 #define STATUS_READY 1      ///< System ready
@@ -89,10 +90,8 @@ class FilamentWeight {
     /**
      * Exectues a scale series of readings without the plastic spool
      * (and any other extra weight that is not part of the measure)
-     * 
-     * \return the readings average
      */
-    float readScale(void);
+    void readScale(void);
 
    /**
     * Calculate the consumed material after the roll loading in centimeters

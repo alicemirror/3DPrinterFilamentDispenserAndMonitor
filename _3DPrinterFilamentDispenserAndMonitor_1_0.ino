@@ -7,11 +7,11 @@
  DC motor controller Arduino shield.
  The software has been developed on the Infineon XMC110 mciro controller board Arduino compatible
 
- Licensed under GNU GPL 4.0
- Author:  Enrico Miglino. (c) 2017
-          Balearic Dynamics SL balearicdynamic@gmail.com
- Updated sources on GitHUB: https://github.com/alicemirror/3DPrinterFilamentMonitor-LCD/
-
+ *  \author Enrico Miglino <balearicdynamics@gmail.com> \n
+ *  Balearic Dynamics sl <www.balearicdynamics.com> SPAIN
+ *  \date July 2017
+ *  \version 1.0 Release Candidate
+ *  Licensed under GNU LGPL 3.0
 */
 
 #include "filament.h"
@@ -64,26 +64,30 @@ void setup() {
  * The scale reading is done at a specific frequence and is interrupt-driven
  */
 void loop() {
-  // Get the last reading
-  digitalWrite(READING_PIN, HIGH);
-  scale.prevRead = scale.lastRead;
-  scale.lastRead = scale.readScale();
+  scale.readScale();
+
+//  Serial.println(scale.lastRead);
   
 #ifdef _USE_MOTOR
   // Check for the extruder request
-  if( ((scale.lastRead - scale.prevRead) > MIN_EXTRUDER_TENSION) &&
+  if( ((scale.lastRead - scale.prevRead) >= MIN_EXTRUDER_TENSION) &&
       (scale.statID == STAT_RUN) ) {
     if(modeAuto) {
+      digitalWrite(READING_PIN, HIGH);
       motor.feedExtruder(FEED_EXTRUDER_DELAY);
       motor.tleDiagnostic();
+      digitalWrite(READING_PIN, LOW);
     }
     else {
       serialMessage(CMD_EXTRUDERPULL, "");
     }
+    // Reset the normal reading
+    scale.prevRead = scale.lastRead;
+    scale.statID = STAT_LOAD;
+    scale.readScale();
+    scale.statID = STAT_RUN;
   }
-
 #endif
-  digitalWrite(READING_PIN, LOW);
 
   // Check if the material characteristics has changed
   if(scale.currentStatus.filamentMaterialChanged) {
@@ -202,7 +206,6 @@ void serialMessage(String title, String description) {
   else if(commandString.equals(S_LOAD)) {
     scale.stat = SYS_LOAD;
     scale.statID = STAT_LOAD;
-    scale.initialWeight = scale.lastRead;
     scale.currentStatus.weightStatusChangedShown = true;
   }
   // Send a run command status setting
@@ -210,6 +213,8 @@ void serialMessage(String title, String description) {
   else if(commandString.equals(S_RUN)) {
     scale.stat = SYS_RUN;
     scale.statID = STAT_RUN;
+    scale.initialWeight = scale.lastRead;
+    scale.lastConsumedGrams = 0;
     scale.currentStatus.weightStatusChangedShown = true;
   }
   // Send a default command status setting
@@ -249,25 +254,32 @@ void serialMessage(String title, String description) {
 #ifdef _USE_MOTOR
   else if(commandString.equals(MOTOR_FEED)) {
     serialMessage(CMD_EXEC, commandString);
+    digitalWrite(READING_PIN, HIGH);
     motor.feedExtruder(FEED_EXTRUDER_DELAY);
     motor.tleDiagnostic();
+    digitalWrite(READING_PIN, LOW);
   }
   else if(commandString.equals(MOTOR_PULL)) {
     serialMessage(CMD_EXEC, commandString);
+    digitalWrite(READING_PIN, HIGH);
     motor.filamentLoad(FEED_EXTRUDER_DELAY);
     motor.tleDiagnostic();
+    digitalWrite(READING_PIN, LOW);
   }
   else if(commandString.equals(MOTOR_STOP)) {
     serialMessage(CMD_EXEC, commandString);
     motor.motorBrake();
     motor.tleDiagnostic();
+    digitalWrite(READING_PIN, LOW);
   }
   else if(commandString.equals(MOTOR_FEED_CONT)) {
     serialMessage(CMD_EXEC, commandString);
+    digitalWrite(READING_PIN, HIGH);
     motor.filamentContFeed();
   }
   else if(commandString.equals(MOTOR_PULL_CONT)) {
     serialMessage(CMD_EXEC, commandString);
+    digitalWrite(READING_PIN, HIGH);
     motor.filamentContLoad();
   }
 #endif

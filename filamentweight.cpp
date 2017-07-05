@@ -5,7 +5,8 @@
  *  \author Enrico Miglino <balearicdynamics@gmail.com> \n
  *  Balearic Dynamics sl <www.balearicdynamics.com> SPAIN
  *  \date July 2017
- *  \version 1.0 beta
+ *  \version 1.0 Release Candidate
+ *  Licensed under GNU LGPL 3.0
  */
 
 #include "filamentweight.h"
@@ -30,10 +31,53 @@ void FilamentWeight::reset(void) {
   setDefaults();
 }
 
-float FilamentWeight::readScale(void) {
-  prevRead = lastRead;
-  lastRead = scaleSensor.get_units(SCALE_SAMPLES) * -1;
-  return (lastRead);
+void FilamentWeight::readScale(void) {
+  float tempPrevRead;
+  //! calculate the absolute delta as we don't know if the filament is pulled down or up
+  //! respect the scale base
+  float delta;
+
+  // Save the previous reading  
+  tempPrevRead = lastRead;
+  // Read the new scale value
+  lastRead = (scaleSensor.get_units(SCALE_SAMPLES) * - 1);
+
+  // Manage the readings depending on the state
+  switch(statID) {
+    case STAT_RUN:
+    // System running
+    delta = abs(lastRead - tempPrevRead);
+    if(delta >= MIN_EXTRUDER_TENSION) {
+      // Extruder pull
+      prevRead = tempPrevRead; // Keep old previous read
+    }
+    else {
+      prevRead = lastRead; // Save new reading
+    }
+    break;
+    
+    case STAT_READY:
+    // System after initialisation or reset
+    prevRead = tempPrevRead;
+    break;
+    
+    case STAT_LOAD:
+    // Deduct the tare as filament has already been loaded
+    // on the base
+    lastRead -= rollTare;
+    if( (tempPrevRead - lastRead) > MAX_DELTA_WEIGHT_IN_RANGE) {
+      lastRead = tempPrevRead;
+    } // reading invalid
+    else {
+      prevRead = lastRead;
+     } // reading valid
+    break;
+    
+    case STAT_NONE:
+    // System not initialiased
+    lastRead = prevRead = 0;
+    break;
+  }
 }
 
 void FilamentWeight::setDefaults(void) {
@@ -83,6 +127,11 @@ void FilamentWeight::calcMaterialCharacteristics(void) {
       weight = "2";
       break;
   }
+
+#ifdef _USE_MOTOR
+  // Add the weight of the motor group to the tare
+  rollTare += MOTOR_WEIGHT;
+#endif
 
   // Set the parameters depending on the filament
   // characteristics. Strings for display updates.
@@ -138,7 +187,7 @@ float FilamentWeight::calcRemainingPerc(float w) {
 }
 
 void FilamentWeight::showInfo(void) {
-  Serial.print(TIT_MATERIAL);
+  Serial.println(TIT_MATERIAL);
   Serial.print(material);
   Serial.print(" ");
   Serial.print(diameter);
@@ -146,11 +195,13 @@ void FilamentWeight::showInfo(void) {
   Serial.print(weight);
   Serial.print(" ");
   Serial.println(UNITS_KG);
+  Serial.print("State: ");
   Serial.println(stat);
 }
 
 void FilamentWeight::showLoad(void) {
   Serial.println(TIT_LOAD);
+  Serial.print(MSG_REMAINING);
   Serial.print(calcRemainingPerc(lastRead));
   Serial.println("%");
 }
@@ -158,11 +209,14 @@ void FilamentWeight::showLoad(void) {
 void FilamentWeight::showConfig(void) {
   Serial.println( TIT_CONFIG);
   // Show load status
+  Serial.print(MSG_REMAINING);
   Serial.print(calcRemainingPerc(lastRead));
   Serial.println("%");
   // Show last and previous read values
   Serial.print("Last read: ");
-  Serial.print(lastRead);
+  Serial.println(lastRead);
+  Serial.print("Previous read: ");
+  Serial.println(prevRead);
   // Show internal settings
   Serial.print("Calib.: ");
   Serial.print(scaleCalibration);
@@ -170,7 +224,7 @@ void FilamentWeight::showConfig(void) {
 }
 
 float FilamentWeight::getWeight(void) {
-  return scaleSensor.get_units(SCALE_SAMPLES);
+  return scaleSensor.get_units(SCALE_SAMPLES) * -1;
 }
 
 void FilamentWeight::calibrate3Pass(void) {
@@ -199,11 +253,16 @@ void FilamentWeight::showStat(void) {
   float consumedGrams;
   consumedGrams = calcConsumedGrams();
 
+  Serial.println(TIT_STAT);
+
   // Avoid negative values due to floating values (mostly vibrations)
-  if(consumedGrams < 0)
+  if( (consumedGrams < 0) || (consumedGrams < SCALE_RESOLUTION) )
     consumedGrams = lastConsumedGrams;
   else
     lastConsumedGrams = consumedGrams;
+
+  // Used material
+  Serial.print(MSG_USED);
 
   // Select the representation uinit
   if(filamentUnits == _GR) {

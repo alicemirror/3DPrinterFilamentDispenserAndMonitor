@@ -17,7 +17,8 @@
  *  \author Enrico Miglino <balearicdynamics@gmail.com> \n
  *  Balearic Dynamics sl <www.balearicdynamics.com> SPAIN
  *  \date July 2017
- *  \version 1.0 beta
+ *  \version 1.0 Release Candidate
+ *  Licensed under GNU LGPL 3.0
  */
 
 #ifndef _FILAMENT
@@ -29,12 +30,16 @@
 #undef _DEBUG_FILAMENT
 
 //! Application title shown on startup
-#define APP_TITLE "Balearic Dynamics Ver. 1.2.1"
+#define APP_TITLE "Balearic Dynamics Ver. 1.0 RC"
 
-#define TIT_MATERIAL "Material"
+#define TIT_MATERIAL "[Material]"
 #define CALIBRATING "Calibrating..."
-#define TIT_CONFIG "Configuration"
-#define TIT_LOAD "Status"
+#define TIT_CONFIG "[Configuration]"
+#define TIT_LOAD "[Status]"
+#define TIT_STAT "[Partial]"
+
+#define MSG_USED "used: "
+#define MSG_REMAINING "remaining: "
 
 // Material type IDs
 #define PLA 0
@@ -109,17 +114,25 @@
 //! We assume that the plastic empty roll weight is
 //! the same for any kind but this parameter should
 //! be verified
-#define ROLL_WEIGHT 225
+#define ROLL_WEIGHT 195
+
+//! Weight of the motor group part of the tare
+#define MOTOR_WEIGHT 158.50
 
 //! This value is calculated empirycally and is the zero weight for the
 //! used 3D printed model
-#define SCALE_CALIBRATION 428.0
+#define SCALE_CALIBRATION 434.50
 
 //! Numer of reading steps used by the three pass manual calibration
 #define CALIBRATION_STEPS 10
 
 //! Minimum weight difference between two updates in grams
-#define SCALE_RESOLUTION 0.15
+#define SCALE_RESOLUTION 1.50
+
+//! Max previous-last delta value between two readings before
+//! the current reading will be discarded due a noise variation
+//! isntead a real weight change
+#define MAX_DELTA_WEIGHT_IN_RANGE 10
 
 //! Number of samples read every weight reading. 
 //! Multiple samples reading gives more stability to the measure
