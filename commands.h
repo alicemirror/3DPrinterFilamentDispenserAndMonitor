@@ -23,6 +23,7 @@
 #define CMD_STATUS "***CMD : set status to "
 #define CMD_WEIGHT "WEIGHT = "
 #define CMD_WRONGCMD "***ERR : wrong value "
+#define CMD_EXTRUDERPULL "***EARNING : Filament request!!!"
 
 // Filament setup
 #define SET_PLA "PLA"

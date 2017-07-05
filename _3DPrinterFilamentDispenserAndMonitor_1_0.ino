@@ -23,6 +23,8 @@
 
 #ifdef _USE_MOTOR
 MotorControl motor;
+//! operating mode
+boolean modeAuto;
 #endif
 
 //! The weight control class
@@ -48,6 +50,7 @@ void setup() {
 #ifdef _USE_MOTOR
   // initialize the motor class
   motor.begin();  
+  modeAuto = false;
 #endif
 }
 
@@ -65,7 +68,21 @@ void loop() {
   digitalWrite(READING_PIN, HIGH);
   scale.prevRead = scale.lastRead;
   scale.lastRead = scale.readScale();
-//  Serial << "lastRead=" << scale.lastRead << endl;
+  
+#ifdef _USE_MOTOR
+  // Check for the extruder request
+  if( ((scale.lastRead - scale.prevRead) > MIN_EXTRUDER_TENSION) &&
+      (scale.statID == STAT_RUN) ) {
+    if(modeAuto) {
+      motor.feedExtruder(FEED_EXTRUDER_DELAY);
+      motor.tleDiagnostic();
+    }
+    else {
+      serialMessage(CMD_EXTRUDERPULL, "");
+    }
+  }
+
+#endif
   digitalWrite(READING_PIN, LOW);
 
   // Check if the material characteristics has changed
@@ -284,9 +301,11 @@ void serialMessage(String title, String description) {
 
   else if(commandString.equals(MODE_AUTO)) {
     serialMessage(CMD_MODE, commandString);
+    modeAuto = true;
   }
   else if(commandString.equals(MODE_MANUAL)) {
     serialMessage(CMD_MODE, commandString);
+    modeAuto = false;
   }
 //  else
 //    serialMessage(CMD_WRONGCMD, commandString);

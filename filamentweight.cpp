@@ -32,7 +32,7 @@ void FilamentWeight::reset(void) {
 
 float FilamentWeight::readScale(void) {
   prevRead = lastRead;
-  lastRead = scaleSensor.get_units(SCALE_SAMPLES);
+  lastRead = scaleSensor.get_units(SCALE_SAMPLES) * -1;
   return (lastRead);
 }
 
@@ -127,7 +127,6 @@ float FilamentWeight::valOptimizer(float value) {
   // Reduce the precison of a factor 10 (0.01) according with the physical precison of the readings
   optimizer = int(value * 10);
   return optimizer / 10;
-
 }
 
 float FilamentWeight::calcGgramsToCentimeters(float w) {
@@ -205,11 +204,6 @@ void FilamentWeight::showStat(void) {
     consumedGrams = lastConsumedGrams;
   else
     lastConsumedGrams = consumedGrams;
-  
-//  Serial.print(calcGgramsToCentimeters(lastRead)/100);
-//  Serial.println(UNITS_MT);
-//  Serial.print(calcRemainingPerc(lastRead));
-//  Serial.println("%");
 
   // Select the representation uinit
   if(filamentUnits == _GR) {
