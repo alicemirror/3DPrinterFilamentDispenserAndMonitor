@@ -19,7 +19,7 @@
 /**
  * Internal status of the motor
  */
-typedef struct motorStatus {
+struct motorStatus {
   boolean isRunning;
   int minDC;
   int maxDC;

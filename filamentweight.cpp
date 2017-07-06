@@ -251,15 +251,15 @@ void FilamentWeight::calibrate3Pass(void) {
 
 void FilamentWeight::showStat(void) {
   float consumedGrams;
-  consumedGrams = calcConsumedGrams();
+  consumedGrams = abs(calcConsumedGrams());
 
   Serial.println(TIT_STAT);
 
   // Avoid negative values due to floating values (mostly vibrations)
-  if( (consumedGrams < 0) || (consumedGrams < SCALE_RESOLUTION) )
-    consumedGrams = lastConsumedGrams;
-  else
-    lastConsumedGrams = consumedGrams;
+//  if( (consumedGrams < 0) || (consumedGrams < SCALE_RESOLUTION) )
+//    consumedGrams = lastConsumedGrams;
+//  else
+//    lastConsumedGrams = consumedGrams;
 
   // Used material
   Serial.print(MSG_USED);

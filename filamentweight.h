@@ -26,7 +26,7 @@
 #define STATS_STARTED 4     ///< Application started
 
 //! Status structure varoab;es amd flags
-typedef struct process {
+struct process {
   //! The status of the entire process
   int weightStatus;   
   //! New status change has been shown
@@ -68,7 +68,7 @@ class FilamentWeight {
     //! This flag is set until the calibration process does not exit
     //! or is stopped by another command
     boolean isCalibrating;
-    //! Calibration known weight in grams (should be integer)
+    //! Calibration known weight in grams
     float knownWeight;
 
     /**
