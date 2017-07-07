@@ -106,10 +106,6 @@ void MotorControl::motorRun(int minDC, int maxDC, int accdelay, long duration, i
     tle94112.configPWM(tle94112.TLE_PWM1, tle94112.TLE_FREQ200HZ, j);
   //Check for error
   if(tleCheckDiagnostic()) {
-#ifdef _MOTORDEBUG
-    Serial.print("from motorRun() acceleration loop, DC = ");
-    Serial.println(j);
-#endif
     tleDiagnostic();
   }
     delay(accdelay);
@@ -119,9 +115,6 @@ void MotorControl::motorRun(int minDC, int maxDC, int accdelay, long duration, i
   tle94112.configPWM(tle94112.TLE_PWM1, tle94112.TLE_FREQ200HZ, maxDC);
   //Check for error
   if(tleCheckDiagnostic()) {
-#ifdef _MOTORDEBUG
-    Serial.println("from motorRun() regime speed running");
-#endif
     tleDiagnostic();
   }
   delay(duration);
@@ -132,10 +125,6 @@ void MotorControl::motorRun(int minDC, int maxDC, int accdelay, long duration, i
     tle94112.configPWM(tle94112.TLE_PWM1, tle94112.TLE_FREQ200HZ, j);
   //Check for error
   if(tleCheckDiagnostic()) {
-#ifdef _MOTORDEBUG
-    Serial.print("from motorRun() deceleration loop, DC = ");
-    Serial.println(j);
-#endif
     tleDiagnostic();
   }
     delay(accdelay);
@@ -184,15 +173,10 @@ void MotorControl::motorStart(int minDC, int maxDC, int accdelay, int motorDirec
     tle94112.configPWM(tle94112.TLE_PWM1, tle94112.TLE_FREQ200HZ, j);
     //Check for error
     if(tleCheckDiagnostic()) {
-#ifdef _MOTORDEBUG
-      Serial.print("from motorRun() acceleration loop, DC = ");
-      Serial.println(j);
-#endif
       tleDiagnostic();
     }
     delay(accdelay);
   }
-
   tle94112.configPWM(tle94112.TLE_PWM1, tle94112.TLE_FREQ200HZ, maxDC);
 }
 
@@ -226,9 +210,6 @@ void MotorControl::motorBrake(void) {
 #endif
 //Check for error
   if(tleCheckDiagnostic()) {
-#ifdef _MOTORDEBUG
-    Serial.println("from motorBrake()");
-#endif
     tleDiagnostic();
   }
 }
@@ -244,21 +225,18 @@ void MotorControl::tleDiagnostic() {
   int diagnosis = tle94112.getSysDiagnosis();
 
   if(diagnosis == tle94112.TLE_STATUS_OK) {
-    Serial.println(TLE_ERROR_HORBAR);
     Serial.println(TLE_NOERROR);
   } // No errors
   else {
     // Open load error can be ignored
     if(tle94112.getSysDiagnosis(tle94112.TLE_LOAD_ERROR)) {
 #ifndef _IGNORE_OPENLOAD
-      Serial.println(TLE_ERROR_HORBAR);
       Serial.println(TLE_ERROR_MSG);
       Serial.println(TLE_LOADERROR);
       Serial.println("");
 #endif
     } // Open load error
     else {
-      Serial.println(TLE_ERROR_HORBAR);
       Serial.println(TLE_ERROR_MSG);
       if(tle94112.getSysDiagnosis(tle94112.TLE_SPI_ERROR)) {
         Serial.println(TLE_SPIERROR);

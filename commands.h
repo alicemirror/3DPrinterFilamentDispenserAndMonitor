@@ -16,15 +16,15 @@
 #undef _DEBUG_COMMANDS
 
 // Execution notification, debug only
-#define CMD_EXEC "***CMD : executing "
-#define CMD_NOCMD "***ERR : unknown "
-#define CMD_SET "***CMD : setting "
-#define CMD_MODE "***CMD : set mode to "
-#define CMD_UNITS "***CMD : set units to "
-#define CMD_STATUS "***CMD : set status to "
-#define CMD_WEIGHT "WEIGHT = "
-#define CMD_WRONGCMD "***ERR : wrong value "
-#define CMD_EXTRUDERPULL "***WARNING : Filament request!!!"
+#define CMD_EXEC "executing "
+#define CMD_NOCMD "unknown "
+#define CMD_SET "setting "
+#define CMD_MODE "set mode to "
+#define CMD_UNITS "set units to "
+#define CMD_STATUS "set status to "
+#define CMD_WEIGHT "Weight "
+#define CMD_WRONGCMD "wrong value "
+#define CMD_EXTRUDERPULL "WARNING!!!"
 
 // Filament setup
 #define SET_PLA "PLA"
@@ -49,21 +49,21 @@
 
 // Running mode
 #define MODE_AUTO "auto"        // Run in automatic mode
-#define MODE_MANUAL "manual"    // Run in manual mode
+#define MODE_MANUAL "man"    // Run in manual mode
 
 // Motor control
 #ifdef _USE_MOTOR
 #define MOTOR_FEED "feed"       // Feed a length unit
 #define MOTOR_PULL "pull"       // Pull back a lenght unit
 #define MOTOR_STOP "stop"       // Pull back a lenght unit
-#define MOTOR_FEED_CONT "feedcont"    // Feed continuopusly
-#define MOTOR_PULL_CONT "pullcont"    // Pull back continuously
+#define MOTOR_FEED_CONT "feedc"    // Feed continuopusly
+#define MOTOR_PULL_CONT "pullc"    // Pull back continuously
 #endif
 
 // Information commands
 #define SHOW_INFO "info"          // Shows roll current info
-#define SHOW_STATUS "status"      // Shows weight status values
-#define SHOW_DUMP "dump"          // Dump all the current settings
+#define SHOW_STATUS "stat"      // Shows weight status values
+#define SHOW_DUMP "conf"        // Dump the current settings
 #define SHOW_WEIGHT "weight"      // Show the current read weight
 
 #endif

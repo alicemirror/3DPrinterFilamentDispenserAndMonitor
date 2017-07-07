@@ -41,7 +41,6 @@ void setup() {
 
   // Print the initialisation message
   Serial.println(APP_TITLE);
-  Serial.println(CALIBRATING);
 
   // Set the dip switch pins
   pinMode(READING_PIN, OUTPUT);   // LED reading signal
@@ -57,8 +56,7 @@ void setup() {
 // ==============================================
 // Main loop
 // ==============================================
-
-/* 
+/** 
  * The main loop role is execturing the service functions; display update, 
  * calculations, button checking
  * The scale reading is done at a specific frequence and is interrupt-driven
@@ -70,36 +68,15 @@ void loop() {
   
 #ifdef _USE_MOTOR
   // Check for the extruder request
-  if( ((scale.lastRead - scale.prevRead) >= MIN_EXTRUDER_TENSION) &&
-      (scale.statID == STAT_RUN) ) {
+  if( (scale.statID == STAT_RUN) && (scale.currentStatus.filamentNeededFromExtruder == true) ) {
     if(modeAuto) {
       digitalWrite(READING_PIN, HIGH);
       motor.feedExtruder(FEED_EXTRUDER_DELAY);
       motor.tleDiagnostic();
       digitalWrite(READING_PIN, LOW);
     }
-    else {
-      serialMessage(CMD_EXTRUDERPULL, "");
-    }
-    // Reset the normal reading
-    scale.prevRead = scale.lastRead;
-    scale.statID = STAT_LOAD;
-    scale.readScale();
-    scale.statID = STAT_RUN;
   }
 #endif
-
-  // Check if the material characteristics has changed
-  if(scale.currentStatus.filamentMaterialChanged) {
-    scale.showInfo();
-    scale.currentStatus.filamentMaterialChanged = false;
-  }
-
-  // Check if the status has changed
-  if(scale.currentStatus.weightStatusChangedShown) {
-    scale.showStat();
-    scale.currentStatus.weightStatusChangedShown = false;
-  }
 
   // Check if the motor is running to test the errors status
   if(motor.internalStatus.isRunning) {
@@ -135,43 +112,43 @@ void serialMessage(String title, String description) {
   // Flag is set to display an update nesxt loop cycle
   if(commandString.equals(SET_PLA)) {
     scale.materialID = PLA;
-    scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
+    scale.showInfo();
   }
   // Set ABS material and recalculate the material characteristics
   // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_ABS)) {
     scale.materialID = ABS;
-    scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
+    scale.showInfo();
   }
   // Set 1.75 mm filament diameter and recalculate the material characteristics
   // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_175)) {
     scale.diameterID = DIAM_175;
-    scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
+    scale.showInfo();
   }
   // Set 3.00 mm filament diameter and recalculate the material characteristics
   // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_300)) {
     scale.diameterID = DIAM_300;
-    scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
+    scale.showInfo();
   }
   // Set 1kg filament spool and recalculate the material characteristics
   // Flag is set to display an update next loop cycle
   else if(commandString.equals(SET_1KG)) {
     scale.wID = ROLL1KG;
-    scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
+    scale.showInfo();
   }
   // Set 2kg filament spool and recalculate the material characteristics
   // Flag is set to display an update nesxt loop cycle
   else if(commandString.equals(SET_2KG)) {
     scale.wID = ROLL2KG;
-    scale.currentStatus.filamentMaterialChanged = true;
     scale.calcMaterialCharacteristics();
+    scale.showInfo();
   }
   // Set units in grams
   else if(commandString.equals(SET_WEIGHT)) {
@@ -197,7 +174,7 @@ void serialMessage(String title, String description) {
     scale.reset();
     scale.stat = SYS_READY;
     scale.statID = STAT_READY;
-    scale.currentStatus.filamentMaterialChanged = true;
+    scale.showInfo();
   }
   // Send a load command status setting
   // Should be executed after the filament roll has been set 
@@ -206,7 +183,7 @@ void serialMessage(String title, String description) {
   else if(commandString.equals(S_LOAD)) {
     scale.stat = SYS_LOAD;
     scale.statID = STAT_LOAD;
-    scale.currentStatus.weightStatusChangedShown = true;
+    scale.showLoad();
   }
   // Send a run command status setting
   // Should be sent when a print job is started
@@ -214,8 +191,9 @@ void serialMessage(String title, String description) {
     scale.stat = SYS_RUN;
     scale.statID = STAT_RUN;
     scale.initialWeight = scale.lastRead;
+    scale.prevRead = scale.lastRead;
     scale.lastConsumedGrams = 0;
-    scale.currentStatus.weightStatusChangedShown = true;
+    scale.showStat();
   }
   // Send a default command status setting
   // Should be used to reset the system to the default values 
@@ -224,7 +202,7 @@ void serialMessage(String title, String description) {
   // Use this commmand to reset the material to the internal conditions
   else if(commandString.equals(S_DEFAULT)) {
     scale.setDefaults();
-    scale.currentStatus.filamentMaterialChanged = true;
+    scale.showInfo();
   }  
 
   // =========================================================
@@ -283,29 +261,6 @@ void serialMessage(String title, String description) {
     motor.filamentContLoad();
   }
 #endif
-
-  // =========================================================
-  // Calibration - Not working :-(
-  // =========================================================
-//  if( (commandString.equals(MANUAL_CALIBRATION)) || (scale.isCalibrating == true) ) {
-//      switch(scale.cal3Pass) {
-//        case 0:
-//          scale.isCalibrating = true;
-//          scale.calibrate3Pass();
-//          Serial.println("Pass 1 done.");
-//        break;
-//        case 1:
-//          scale.calibrate3Pass();
-//          Serial.println("Pass 2 done.");
-//        break;
-//        case 2:
-//          scale.knownWeight = commandString.toFloat();
-//          scale.calibrate3Pass();
-//          scale.showConfig();
-//          Serial.println("Pass 3 done.");
-//        break;
-//      } // calibration steps
-//  }
 
   // =========================================================
   // Change behaviour mode

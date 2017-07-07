@@ -42,7 +42,7 @@
 #define DC_MAX_MANUAL_LOAD 255    ///< Max duty cycle for acceleration on manual loading
 
 #define INVERT_DIRECTION_DELAY 300  ///< Delay in ms when the motor should invert direction
-#define ACCELERATION_DELAY 5 //25   ///< Delay between acceleration steps
+#define ACCELERATION_DELAY 5        ///< Delay between acceleration steps
 #define FEED_EXTRUDER_DELAY 1500    ///< Delay ms for an Extruder feed unit (time related to filament feed length)
 
 #define DIRECTION_FEED 1    ///< Motor rotates to release filament
@@ -50,19 +50,18 @@
 
 #ifdef _HIGHCURRENT
 //! High current error title
-#define TLE_ERROR_MSG "Errors occured in TLE94112 (High current mode)"
+#define TLE_ERROR_MSG "TLE94112 HC Error"
 #else
 //! Error title
-#define TLE_ERROR_MSG "Errors occured in TLE94112"
+#define TLE_ERROR_MSG "TLE94112 Error"
 #endif
 #define TLE_NOERROR "No Error"
 #define TLE_SPIERROR "SPI"
-#define TLE_LOADERROR "Open load"
-#define TLE_UNDERVOLTAGE "Under voltage"
-#define TLE_OVERVOLTAGE "Over voltage"
-#define TLE_POWERONRESET "Power on reset" 
-#define TLE_TEMPSHUTDOWN "Temperature shutdown"
-#define TLE_TEMPWARNING "Warning high temperature"
-#define TLE_ERROR_HORBAR "********************************************"
+#define TLE_LOADERROR "Open"
+#define TLE_UNDERVOLTAGE "Under V"
+#define TLE_OVERVOLTAGE "Over V"
+#define TLE_POWERONRESET "Pwr rst" 
+#define TLE_TEMPSHUTDOWN "Temp shutdown"
+#define TLE_TEMPWARNING "Warn high temp"
 
 #endif

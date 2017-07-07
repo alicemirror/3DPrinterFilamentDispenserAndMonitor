@@ -13,10 +13,7 @@
 
 void FilamentWeight::begin(void) {
   scaleSensor.begin(DOUT, CLK);
-  // Used by two pass calibration only
-  cal3Pass = 0;
   scaleCalibration = SCALE_CALIBRATION;
-  isCalibrating = false;
   // Initialise the scale with the model calibration factor then set the initial weight to 0
   scaleSensor.set_scale(scaleCalibration);
   scaleSensor.tare();
@@ -33,12 +30,16 @@ void FilamentWeight::reset(void) {
 
 void FilamentWeight::readScale(void) {
   float tempPrevRead;
-  //! calculate the absolute delta as we don't know if the filament is pulled down or up
+  //! calculate the absolute delta as we don't know 
+  //! if the filament is pulled down or up
   //! respect the scale base
   float delta;
 
   // Save the previous reading  
   tempPrevRead = lastRead;
+
+  prevRead = lastRead; // ***
+  
   // Read the new scale value
   lastRead = (scaleSensor.get_units(SCALE_SAMPLES) * - 1);
 
@@ -46,13 +47,25 @@ void FilamentWeight::readScale(void) {
   switch(statID) {
     case STAT_RUN:
     // System running
-    delta = abs(lastRead - tempPrevRead);
+    delta = abs(lastRead - prevRead);
+
+//    Serial.print("RUN delta = ");
+//    Serial.print(delta);
+//    Serial.print(" initialWeight = ");
+//    Serial.print(initialWeight);
+//    Serial.print(" lastRead = ");
+//    Serial.print(lastRead);
+//    Serial.print(" prevRead = ");
+//    Serial.print(prevRead);
+//    Serial.print(" tempPrevRead = ");
+//    Serial.println(tempPrevRead);
+    
     if(delta >= MIN_EXTRUDER_TENSION) {
       // Extruder pull
-      prevRead = tempPrevRead; // Keep old previous read
+      currentStatus.filamentNeededFromExtruder = true;
     }
     else {
-      prevRead = lastRead; // Save new reading
+      currentStatus.filamentNeededFromExtruder = false;
     }
     break;
     
@@ -62,9 +75,6 @@ void FilamentWeight::readScale(void) {
     break;
     
     case STAT_LOAD:
-    // Deduct the tare as filament has already been loaded
-    // on the base
-    lastRead -= rollTare;
     if( (tempPrevRead - lastRead) > MAX_DELTA_WEIGHT_IN_RANGE) {
       lastRead = tempPrevRead;
     } // reading invalid
@@ -83,9 +93,6 @@ void FilamentWeight::readScale(void) {
 void FilamentWeight::setDefaults(void) {
   // Initializes the parameters status
   currentStatus.weightStatus = STATUS_RESET;
-  currentStatus.weightStatusChangedShown = false;
-  currentStatus.weightExtruderTension = false;
-  currentStatus.filamentMaterialChanged = false;
 
   stat = SYS_STARTED;
   statID = STAT_NONE;
@@ -168,7 +175,7 @@ float FilamentWeight::calcConsumedCentimeters(void) {
 }
 
 float FilamentWeight::calcConsumedGrams(void) {
-  return initialWeight - lastRead;
+  return (initialWeight - lastRead) - rollTare;
 }
 
 float FilamentWeight::valOptimizer(float value) {
@@ -187,36 +194,46 @@ float FilamentWeight::calcRemainingPerc(float w) {
 }
 
 void FilamentWeight::showInfo(void) {
-  Serial.println(TIT_MATERIAL);
   Serial.print(material);
-  Serial.print(" ");
+  Serial.print("\t");
   Serial.print(diameter);
-  Serial.print(" ");
+  Serial.print("\t");
   Serial.print(weight);
   Serial.print(" ");
   Serial.println(UNITS_KG);
   Serial.print("State: ");
   Serial.println(stat);
+  Serial.println("");
 }
 
 void FilamentWeight::showLoad(void) {
-  Serial.println(TIT_LOAD);
+  int netWeight = lastRead - rollTare;
+
   Serial.print(MSG_REMAINING);
-  Serial.print(calcRemainingPerc(lastRead));
-  Serial.println("%");
+  Serial.print(netWeight);
+  Serial.print(" ");
+  Serial.print(UNITS_GR);
+  Serial.print("\t");
+  Serial.print(valOptimizer(calcGgramsToCentimeters(netWeight)/100));
+  Serial.print(" ");
+  Serial.print(UNITS_MT);
+  Serial.print(" (");
+  Serial.print(calcRemainingPerc(netWeight));
+  Serial.println("%)\n");
 }
 
 void FilamentWeight::showConfig(void) {
-  Serial.println( TIT_CONFIG);
+    int netWeight = lastRead - rollTare;
+
   // Show load status
   Serial.print(MSG_REMAINING);
-  Serial.print(calcRemainingPerc(lastRead));
+  Serial.print(calcRemainingPerc(netWeight));
   Serial.println("%");
   // Show last and previous read values
   Serial.print("Last read: ");
-  Serial.println(lastRead);
+  Serial.println(netWeight);
   Serial.print("Previous read: ");
-  Serial.println(prevRead);
+  Serial.println(prevRead - rollTare);
   // Show internal settings
   Serial.print("Calib.: ");
   Serial.print(scaleCalibration);
@@ -227,39 +244,20 @@ float FilamentWeight::getWeight(void) {
   return scaleSensor.get_units(SCALE_SAMPLES) * -1;
 }
 
-void FilamentWeight::calibrate3Pass(void) {
-  // First pass calibration
-  if(cal3Pass == 0) {
-    isCalibrating = true;
-    scaleSensor.set_scale();
-    scaleSensor.tare(); 
-    cal3Pass++;
-  }
-  // Second pass calibration
-  else if(cal3Pass == 1) {
-    scaleCalibration = scaleSensor.get_units(CALIBRATION_STEPS);
-    cal3Pass++;
-  }
-  // Third pass calibration
-  else if(cal3Pass == 2) {
-    scaleCalibration = scaleCalibration / knownWeight;
-    isCalibrating = false;
-    cal3Pass = 0;
-    reset();
-  }
-}
-
 void FilamentWeight::showStat(void) {
   float consumedGrams;
-  consumedGrams = abs(calcConsumedGrams());
 
-  Serial.println(TIT_STAT);
+  // If initialWeight is 0 run mode has not yet started
+  if(initialWeight != 0 )
+    consumedGrams = abs(calcConsumedGrams());
+  else
+    consumedGrams = 0;
 
   // Avoid negative values due to floating values (mostly vibrations)
-//  if( (consumedGrams < 0) || (consumedGrams < SCALE_RESOLUTION) )
-//    consumedGrams = lastConsumedGrams;
-//  else
-//    lastConsumedGrams = consumedGrams;
+  if( (consumedGrams < 0) || (consumedGrams < SCALE_RESOLUTION) )
+    consumedGrams = lastConsumedGrams;
+  else
+    lastConsumedGrams = consumedGrams;
 
   // Used material
   Serial.print(MSG_USED);
@@ -267,6 +265,7 @@ void FilamentWeight::showStat(void) {
   // Select the representation uinit
   if(filamentUnits == _GR) {
     Serial.print(valOptimizer(consumedGrams));
+    Serial.print(" ");
     Serial.println(UNITS_GR);
   } // Units in weight
   else {
@@ -277,12 +276,15 @@ void FilamentWeight::showStat(void) {
     // Select the length representation
     if(loadedCentimeters > CENTIMETERS_PER_METER) {
       Serial.print(loadedCentimeters/CENTIMETERS_PER_METER);
+      Serial.print(" ");
       Serial.println(UNITS_MT);
     } // ... in meters
     else {
       Serial.print(valOptimizer(loadedCentimeters));
+      Serial.print(" ");
       Serial.println(UNITS_CM);
     } // ... in centimeters
   } // Units in length
+  Serial.println("");
 }
 

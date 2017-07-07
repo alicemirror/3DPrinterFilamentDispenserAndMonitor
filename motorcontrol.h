@@ -42,7 +42,6 @@ class MotorControl {
      * pole if more than 0.9A is needed (< 0.18)\n
      * The standard usage mode is in low current mode with a single half bridge every motor pole
      */
-    
     void begin(void);
 
     //! \brief stop the motor control

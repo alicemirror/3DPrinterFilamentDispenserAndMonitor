@@ -30,16 +30,10 @@
 #undef _DEBUG_FILAMENT
 
 //! Application title shown on startup
-#define APP_TITLE "Balearic Dynamics Ver. 1.0 RC"
-
-#define TIT_MATERIAL "[Material]"
-#define CALIBRATING "Calibrating..."
-#define TIT_CONFIG "[Configuration]"
-#define TIT_LOAD "[Status]"
-#define TIT_STAT "[Partial]"
+#define APP_TITLE "Filament Control Ver. 1.0 RC"
 
 #define MSG_USED "used: "
-#define MSG_REMAINING "remaining: "
+#define MSG_REMAINING "remain: "
 
 // Material type IDs
 #define PLA 0
@@ -64,7 +58,7 @@
 #define ROLL2KG 1
 
 #define SYS_READY "Ready"       // System ready
-#define SYS_RUN "Job running"   // Filament in use
+#define SYS_RUN "Running"   // Filament in use
 #define SYS_LOAD "Load"         // Roll loaded
 #define SYS_STARTED "Started"   // Application started
 
@@ -140,7 +134,7 @@
 
 //! Minimum number of grams variation between two reading too high
 //! to be considered weight change (tension by the Extruder)
-#define MIN_EXTRUDER_TENSION 50
+#define MIN_EXTRUDER_TENSION 100
 
 //! Filament units IDs
 #define _GR 1

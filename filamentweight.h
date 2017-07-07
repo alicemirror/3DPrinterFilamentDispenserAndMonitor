@@ -29,13 +29,8 @@
 struct process {
   //! The status of the entire process
   int weightStatus;   
-  //! New status change has been shown
-  boolean weightStatusChangedShown;
-  //! Material characteristics flag indicator
-  boolean filamentMaterialChanged;
-  //! Extruder request based on the weight change due to the
-  //! filament tension
-  boolean weightExtruderTension;
+  //! Flag indicating if the extruder is pulling the filament
+  boolean filamentNeededFromExtruder;
 };
 
 /**
@@ -58,18 +53,10 @@ class FilamentWeight {
     //! Sensor library instance
     HX711 scaleSensor;
 
-    //! Pass number for the 2 pass calibration method
-    int cal3Pass;
     //! The scale calibration value
     //! If is hardcoded on startup but can be further updated with the
-    //! calibrate command
+    //! calibrate command (not implemented here)
     float scaleCalibration;
-    //! The calibration flag.
-    //! This flag is set until the calibration process does not exit
-    //! or is stopped by another command
-    boolean isCalibrating;
-    //! Calibration known weight in grams
-    float knownWeight;
 
     /**
      * Initializes the sensor library and the initial default setup
@@ -161,32 +148,6 @@ class FilamentWeight {
       * Return the last value read from the sensor
       */
      float getWeight(void);
-
-    /**
-     * Three-pass calibration to get the sdcale sensor calibration value.
-     * 
-     * For setup use only then the calibration value should be
-     * set used by SCALE_CALIBRATION in filament.h
-     * 
-     * First pass: the scale sensor is initially set without calibration
-     * value\n
-     * Second pass: a known weight is placed on the scale and the absolute
-     * units are read by the sensor with a 10 readings steps\n
-     * Third pass: the user should write the weight in grams
-     * of the test weight used to calculate the scale calibration
-     * 
-     * At the end of the calibration process the system is reset
-     * 
-     * \warning If the calibration is not hardcoded in the SCALE_CALIBRATION constant
-     * the manual calibration process should be repeated ever ytime the system start.\n
-     * The reset command does not affect the calibration value.
-     * 
-     * \note The two pass calibration process method is called multiple
-     * times by the external and started by tge calibration command
-     * that will guid the user to follow the right calibration
-     * procedure.
-     */
-     void calibrate3Pass(void);
      
     /**
      * Update the materials IDs and calculations 
