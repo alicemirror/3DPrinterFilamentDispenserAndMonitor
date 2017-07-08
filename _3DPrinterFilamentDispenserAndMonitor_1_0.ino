@@ -10,7 +10,7 @@
  *  \author Enrico Miglino <balearicdynamics@gmail.com> \n
  *  Balearic Dynamics sl <www.balearicdynamics.com> SPAIN
  *  \date July 2017
- *  \version 1.0 Release Candidate
+ *  \version 1.0 Release Candidate\n
  *  Licensed under GNU LGPL 3.0
 */
 
@@ -42,8 +42,6 @@ void setup() {
   // Print the initialisation message
   Serial.println(APP_TITLE);
 
-  // Set the dip switch pins
-  pinMode(READING_PIN, OUTPUT);   // LED reading signal
   // Initialize the weight class
   scale.begin();
 #ifdef _USE_MOTOR
@@ -70,10 +68,8 @@ void loop() {
   // Check for the extruder request
   if( (scale.statID == STAT_RUN) && (scale.currentStatus.filamentNeededFromExtruder == true) ) {
     if(modeAuto) {
-      digitalWrite(READING_PIN, HIGH);
       motor.feedExtruder(FEED_EXTRUDER_DELAY);
       motor.tleDiagnostic();
-      digitalWrite(READING_PIN, LOW);
     }
   }
 #endif
@@ -174,6 +170,7 @@ void serialMessage(String title, String description) {
     scale.reset();
     scale.stat = SYS_READY;
     scale.statID = STAT_READY;
+//    scale.flashLED();
     scale.showInfo();
   }
   // Send a load command status setting
@@ -183,6 +180,8 @@ void serialMessage(String title, String description) {
   else if(commandString.equals(S_LOAD)) {
     scale.stat = SYS_LOAD;
     scale.statID = STAT_LOAD;
+    scale.initialWeight = 0;
+    scale.readScale();
     scale.showLoad();
   }
   // Send a run command status setting
@@ -190,7 +189,7 @@ void serialMessage(String title, String description) {
   else if(commandString.equals(S_RUN)) {
     scale.stat = SYS_RUN;
     scale.statID = STAT_RUN;
-    scale.initialWeight = scale.lastRead;
+    scale.initialWeight = scale.lastRead - scale.rollTare;
     scale.prevRead = scale.lastRead;
     scale.lastConsumedGrams = 0;
     scale.showStat();
@@ -232,32 +231,25 @@ void serialMessage(String title, String description) {
 #ifdef _USE_MOTOR
   else if(commandString.equals(MOTOR_FEED)) {
     serialMessage(CMD_EXEC, commandString);
-    digitalWrite(READING_PIN, HIGH);
     motor.feedExtruder(FEED_EXTRUDER_DELAY);
     motor.tleDiagnostic();
-    digitalWrite(READING_PIN, LOW);
   }
   else if(commandString.equals(MOTOR_PULL)) {
     serialMessage(CMD_EXEC, commandString);
-    digitalWrite(READING_PIN, HIGH);
     motor.filamentLoad(FEED_EXTRUDER_DELAY);
     motor.tleDiagnostic();
-    digitalWrite(READING_PIN, LOW);
   }
   else if(commandString.equals(MOTOR_STOP)) {
     serialMessage(CMD_EXEC, commandString);
     motor.motorBrake();
     motor.tleDiagnostic();
-    digitalWrite(READING_PIN, LOW);
   }
   else if(commandString.equals(MOTOR_FEED_CONT)) {
     serialMessage(CMD_EXEC, commandString);
-    digitalWrite(READING_PIN, HIGH);
     motor.filamentContFeed();
   }
   else if(commandString.equals(MOTOR_PULL_CONT)) {
     serialMessage(CMD_EXEC, commandString);
-    digitalWrite(READING_PIN, HIGH);
     motor.filamentContLoad();
   }
 #endif
@@ -274,7 +266,7 @@ void serialMessage(String title, String description) {
     serialMessage(CMD_MODE, commandString);
     modeAuto = false;
   }
-//  else
-//    serialMessage(CMD_WRONGCMD, commandString);
+  else
+    serialMessage(CMD_WRONGCMD, commandString);
  }
 

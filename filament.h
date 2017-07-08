@@ -30,7 +30,7 @@
 #undef _DEBUG_FILAMENT
 
 //! Application title shown on startup
-#define APP_TITLE "Filament Control Ver. 1.0.10 RC"
+#define APP_TITLE "Filament Control Ver. 1.0.20 Final"
 
 #define MSG_USED "used: "
 #define MSG_REMAINING "remain: "
@@ -65,8 +65,8 @@
 // Status codes
 #define STAT_NONE 0
 #define STAT_READY 1
-#define STAT_RUN 2
-#define STAT_LOAD 3
+#define STAT_LOAD 2
+#define STAT_RUN 3
 
 #define DIAMETER175 "1.75 mm"
 #define DIAMETER300 "3.00 mm"
@@ -139,8 +139,4 @@
 //! Filament units IDs
 #define _GR 1
 #define _CM 2
-
-//! LED pin on when reading
-#define READING_PIN 13
-
 #endif

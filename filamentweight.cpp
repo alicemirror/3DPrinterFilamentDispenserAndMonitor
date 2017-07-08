@@ -13,6 +13,9 @@
 
 void FilamentWeight::begin(void) {
   scaleSensor.begin(DOUT, CLK);
+  // Assign the LED pint number and initialize the output  
+  ledPin = 12;
+  pinMode(ledPin, OUTPUT);   // LED reading signal
   scaleCalibration = SCALE_CALIBRATION;
   // Initialise the scale with the model calibration factor then set the initial weight to 0
   scaleSensor.set_scale(scaleCalibration);
@@ -175,7 +178,7 @@ float FilamentWeight::calcConsumedCentimeters(void) {
 }
 
 float FilamentWeight::calcConsumedGrams(void) {
-  return (initialWeight - lastRead) - rollTare;
+  return initialWeight - (lastRead - rollTare);
 }
 
 float FilamentWeight::valOptimizer(float value) {
@@ -209,17 +212,23 @@ void FilamentWeight::showInfo(void) {
 void FilamentWeight::showLoad(void) {
   int netWeight = lastRead - rollTare;
 
-  Serial.print(MSG_REMAINING);
-  Serial.print(netWeight);
-  Serial.print(" ");
-  Serial.print(UNITS_GR);
-  Serial.print("\t");
-  Serial.print(valOptimizer(calcGgramsToCentimeters(netWeight)/100));
-  Serial.print(" ");
-  Serial.print(UNITS_MT);
-  Serial.print(" (");
-  Serial.print(calcRemainingPerc(netWeight));
-  Serial.println("%)\n");
+  // until filament has not been loaded
+  // no status value should be returned
+  if(statID < STAT_LOAD) {
+    Serial.println("--");
+  } else {
+    Serial.print(MSG_REMAINING);
+    Serial.print(netWeight);
+    Serial.print(" ");
+    Serial.print(UNITS_GR);
+    Serial.print("\t");
+    Serial.print(valOptimizer(calcGgramsToCentimeters(netWeight)/100));
+    Serial.print(" ");
+    Serial.print(UNITS_MT);
+    Serial.print(" (");
+    Serial.print(calcRemainingPerc(netWeight));
+    Serial.println("%)\n");
+  }
 }
 
 void FilamentWeight::showConfig(void) {
@@ -286,5 +295,17 @@ void FilamentWeight::showStat(void) {
     } // ... in centimeters
   } // Units in length
   Serial.println("");
+}
+
+void FilamentWeight::flashLED(void) {
+  int j;
+  
+  for(j = 0; j < 20; j++) {
+//    Serial.println("flashLED()");
+    digitalWrite(ledPin, HIGH);
+    delay(100);
+    digitalWrite(ledPin, LOW);
+    delay(100);
+  }
 }
 

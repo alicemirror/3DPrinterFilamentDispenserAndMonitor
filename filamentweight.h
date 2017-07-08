@@ -154,6 +154,11 @@ class FilamentWeight {
      */
     void calcMaterialCharacteristics(void);
 
+    /**
+     * Flash the system LED for 2 seconds to notice the status change
+    */
+    void FilamentWeight::flashLED(void);
+
     //! filament diameter (descriptive)
     String diameter;
     //! material type (descriptive)
@@ -178,6 +183,9 @@ class FilamentWeight {
     float lastConsumedGrams;
     //! Units display flag. Decide if consume is in grams or cm
     float filamentUnits;
+    //! Status change LED
+    int ledPin;
+
 };
 
 #endif
