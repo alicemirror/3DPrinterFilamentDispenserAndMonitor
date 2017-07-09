@@ -23,3 +23,5 @@ Communicates with your serial USB port with any USB connected device with this m
 
 This software is also compatible with the non-motorised verson of the filament roll monitor and dispenser superseeding the previous version. To use the sketch without the motor just '<\#undef _USE_MOTOR>' in filament.h
 
+# The system in action
+[![Video:](http://img.youtube.com/vi/5b4c0GOEcK4/0.jpg)](https://www.youtube.com/watch?v=5b4c0GOEcK4)
