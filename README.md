@@ -16,7 +16,7 @@ Communicates with your serial USB port with any USB connected device with this m
 
 **_Filament base_**: The filament base assemble the load cell sensor holding the MX711 AD filter acting as the support for the filament Roll. The base has four rotating bearings to reduce noise and friction.
 
-[![Video:](http://img.youtube.com/vi/YBbqWqICec8/0.jpg)](http://www.youtube.com/watch?v=YYBbqWqICec8)
+[![Video:](http://img.youtube.com/vi/YBbqWqICec8/0.jpg)](https://www.youtube.com/watch?v=YBbqWqICec8)
 
 ## Application note
 ![Building](images/IMG_20170701_142956.jpg)
