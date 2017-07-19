@@ -157,7 +157,7 @@ class FilamentWeight {
     /**
      * Flash the system LED for 2 seconds to notice the status change
     */
-    void FilamentWeight::flashLED(void);
+    void flashLED(void);
 
     //! filament diameter (descriptive)
     String diameter;

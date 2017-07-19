@@ -30,7 +30,7 @@
 #undef _DEBUG_FILAMENT
 
 //! Application title shown on startup
-#define APP_TITLE "Filament Control Ver. 1.0.20 Final"
+#define APP_TITLE "Filament Control Ver. 1.0.21 Final"
 
 #define MSG_USED "used: "
 #define MSG_REMAINING "remain: "

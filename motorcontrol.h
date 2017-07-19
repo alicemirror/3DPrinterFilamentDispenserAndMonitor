@@ -7,11 +7,13 @@
  *  Balearic Dynamics sl <www.balearicdynamics.com> SPAIN
  *  \date July 2017
  *  \version 1.0 Release Candidate
- *  Licensed under GNU LGPL 3.0
+ *  Licensed under GNU LGPL 3.0 
  */
 
 #ifndef _MOTORCONTROL
 #define _MOTORCONTROL
+
+#define _INFINEON_BOARD // "#undef" if not using Infineon XMC1100 Boot Arduino compatible board
 
 #include <TLE94112.h>
 #include "motor.h"
